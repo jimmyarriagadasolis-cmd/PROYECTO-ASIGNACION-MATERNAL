@@ -1,21 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Asignación Maternal | Ministerio de las Culturas</title>
-    <meta name="description" content="Sistema de gestión de asignación maternal para funcionarias del Ministerio de las Culturas, las Artes y el Patrimonio de Chile">
+    <title>Sistema de Asignaciones 1.0 | Ministerio de las Culturas</title>
+    <meta name="description"
+        content="Sistema de gestión de asignación maternal para funcionarias del Ministerio de las Culturas, las Artes y el Patrimonio de Chile">
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <img src="/assets/logo_ministerio.png" alt="Logo Ministerio" class="logo">
-            <h2>Asignación Maternal</h2>
+            <h2>Sistema de Asignaciones 1.0</h2>
         </div>
-        
+
         <ul class="nav-menu">
             <li class="nav-item active" data-section="dashboard">
                 <span class="nav-icon">📊</span>
@@ -38,7 +41,7 @@
                 <span>Configuración</span>
             </li>
         </ul>
-        
+
         <div class="sidebar-footer">
             <div class="user-info">
                 <span class="user-avatar">👤</span>
@@ -115,7 +118,7 @@
         <section class="content-section" id="section-nueva-solicitud">
             <div class="form-container">
                 <div class="form-header">
-                    <h2>Nueva Solicitud de Asignación Maternal</h2>
+                    <h2>Nueva Solicitud - Sistema de Asignaciones 1.0</h2>
                     <p>Complete todos los campos requeridos para registrar una nueva solicitud</p>
                 </div>
 
@@ -123,44 +126,43 @@
                     <div class="form-grid">
                         <div class="form-section">
                             <h3>Datos de la Funcionaria</h3>
-                            
+
                             <div class="form-group">
                                 <label for="rut">RUT *</label>
-                                <input type="text" id="rut" name="rut_funcionaria" required 
-                                       placeholder="12.345.678-9" maxlength="12">
+                                <input type="text" id="rut" name="rut_funcionaria" required placeholder="12.345.678-9"
+                                    maxlength="12">
                                 <span class="field-error" id="error-rut"></span>
                             </div>
 
                             <div class="form-group">
                                 <label for="nombre">Nombre Completo *</label>
                                 <input type="text" id="nombre" name="nombre_completo" required
-                                       placeholder="María González Pérez">
+                                    placeholder="María González Pérez">
                                 <span class="field-error" id="error-nombre"></span>
                             </div>
 
                             <div class="form-group">
                                 <label for="departamento">Departamento/Unidad *</label>
                                 <input type="text" id="departamento" name="departamento_unidad" required
-                                       placeholder="Ej: Subsecretaría del Patrimonio" list="departamentos">
+                                    placeholder="Ej: Subsecretaría del Patrimonio" list="departamentos">
                                 <datalist id="departamentos"></datalist>
                             </div>
 
                             <div class="form-group">
                                 <label for="email">Correo Institucional *</label>
                                 <input type="email" id="email" name="correo_electronico" required
-                                       placeholder="maria.gonzalez@cultura.gob.cl">
+                                    placeholder="maria.gonzalez@cultura.gob.cl">
                             </div>
 
                             <div class="form-group">
                                 <label for="telefono">Teléfono</label>
-                                <input type="tel" id="telefono" name="telefono"
-                                       placeholder="912345678">
+                                <input type="tel" id="telefono" name="telefono" placeholder="912345678">
                             </div>
                         </div>
 
                         <div class="form-section">
                             <h3>Datos del Embarazo</h3>
-                            
+
                             <div class="form-group">
                                 <label for="fechaInicioEmbarazo">Fecha Inicio de Embarazo *</label>
                                 <input type="date" id="fechaInicioEmbarazo" name="fecha_inicio_embarazo" required>
@@ -179,20 +181,20 @@
 
                         <div class="form-section">
                             <h3>Datos Económicos</h3>
-                            
+
                             <div class="form-group">
                                 <label for="sueldoBruto">Sueldo Bruto Mensual *</label>
                                 <div class="input-with-prefix">
                                     <span class="input-prefix">$</span>
                                     <input type="number" id="sueldoBruto" name="sueldo_bruto_mensual" required
-                                           placeholder="850000" min="0">
+                                        placeholder="850000" min="0">
                                 </div>
                             </div>
 
                             <div class="form-group">
                                 <label for="observaciones">Observaciones</label>
                                 <textarea id="observaciones" name="observaciones" rows="3"
-                                          placeholder="Observaciones adicionales..."></textarea>
+                                    placeholder="Observaciones adicionales..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -256,8 +258,8 @@
                         <option value="Pagada">Pagada</option>
                         <option value="Rechazada">Rechazada</option>
                     </select>
-                    <input type="text" id="filtroBusqueda" class="filtro-input" 
-                           placeholder="Buscar por nombre o RUT...">
+                    <input type="text" id="filtroBusqueda" class="filtro-input"
+                        placeholder="Buscar por nombre o RUT...">
                     <button class="btn btn-secondary" id="btnBuscar">Buscar</button>
                 </div>
                 <button class="btn btn-primary" id="btnExportarExcel">
@@ -295,8 +297,7 @@
                     <h3>Ficha Individual</h3>
                     <p>Genera la ficha PDF de una funcionaria específica</p>
                     <div class="reporte-actions">
-                        <input type="number" id="inputIdFicha" placeholder="ID Solicitud" 
-                               class="input-small">
+                        <input type="number" id="inputIdFicha" placeholder="ID Solicitud" class="input-small">
                         <button class="btn btn-primary" id="btnGenerarFicha">Generar PDF</button>
                     </div>
                 </div>
@@ -312,8 +313,7 @@
                     <div class="reporte-icon">📧</div>
                     <h3>Enviar a Jefatura</h3>
                     <p>Envía el reporte consolidado por correo</p>
-                    <input type="email" id="inputEmailJefatura" placeholder="correo@cultura.gob.cl"
-                           class="input-full">
+                    <input type="email" id="inputEmailJefatura" placeholder="correo@cultura.gob.cl" class="input-full">
                     <button class="btn btn-secondary" id="btnEnviarJefatura">Enviar Reporte</button>
                 </div>
             </div>
@@ -341,7 +341,7 @@
                 <div class="config-card">
                     <h3>Valores de Asignación por Tramo</h3>
                     <p class="config-description">Configure los montos y límites de cada tramo</p>
-                    
+
                     <form id="formTramos" class="config-form">
                         <div class="tramo-config">
                             <h4>Tramo 1</h4>
@@ -356,7 +356,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="tramo-config">
                             <h4>Tramo 2</h4>
                             <div class="tramo-fields">
@@ -370,7 +370,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="tramo-config">
                             <h4>Tramo 3</h4>
                             <div class="tramo-fields">
@@ -392,7 +392,7 @@
                 <div class="config-card">
                     <h3>Configuración SMTP</h3>
                     <p class="config-description">Configure el servidor de correo para envío de reportes</p>
-                    
+
                     <form id="formSMTP" class="config-form">
                         <div class="form-group">
                             <label>Servidor SMTP</label>
@@ -412,7 +412,7 @@
                         </div>
                         <button type="submit" class="btn btn-primary">Guardar Configuración</button>
                     </form>
-                    
+
                     <div class="smtp-status" id="smtpStatus"></div>
                 </div>
             </div>
@@ -443,7 +443,7 @@
         <div class="modal-content modal-login">
             <div class="login-header">
                 <img src="/assets/logo_ministerio.png" alt="Logo" class="login-logo">
-                <h2>Sistema de Asignación Maternal</h2>
+                <h2>Sistema de Asignaciones 1.0</h2>
                 <p>Ministerio de las Culturas, las Artes y el Patrimonio</p>
             </div>
             <form id="formLogin" class="login-form">
@@ -466,4 +466,5 @@
 
     <script src="js/app.js"></script>
 </body>
+
 </html>

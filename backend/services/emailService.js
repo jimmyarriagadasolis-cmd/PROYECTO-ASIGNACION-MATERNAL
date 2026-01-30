@@ -110,14 +110,14 @@ async function enviarFichaIndividual(solicitud, pdfPath, destinatarios) {
                     <p>Para más detalles, revise el documento PDF adjunto.</p>
                     
                     <p style="color: #718096; font-size: 12px; margin-top: 30px;">
-                        Este es un mensaje automático generado por el Sistema de Gestión de Asignación Maternal.<br>
+                        Este es un mensaje automático generado por el Sistema de Asignaciones 1.0.<br>
                         Por favor no responda a este correo.
                     </p>
                 </div>
                 
                 <div style="background-color: #f7fafc; padding: 15px; text-align: center; font-size: 12px; color: #718096;">
                     <p style="margin: 0;">${nombreInstitucion}</p>
-                    <p style="margin: 5px 0 0 0;">Sistema de Gestión de Asignación Maternal</p>
+                    <p style="margin: 5px 0 0 0;">Sistema de Asignaciones 1.0</p>
                 </div>
             </div>
         `,
@@ -204,7 +204,7 @@ async function enviarReporteConsolidado(excelPath, destinatarios, resumen) {
                 </div>
                 
                 <div style="background-color: #f7fafc; padding: 15px; text-align: center; font-size: 12px; color: #718096;">
-                    <p style="margin: 0;">Mensaje automático - Sistema de Gestión de Asignación Maternal</p>
+                    <p style="margin: 0;">Mensaje automático - Sistema de Asignaciones 1.0</p>
                 </div>
             </div>
         `,

@@ -204,7 +204,7 @@ function generarFichaIndividualPDF(solicitud, outputPath) {
                 .font('Helvetica')
                 .text(`Documento generado el: ${fechaGeneracion}`, 50, 720);
             doc.text(`ID Solicitud: ${solicitud.id_solicitud}`, 50, 730);
-            doc.text('Sistema de Gestión de Asignación Maternal - Ministerio de las Culturas', 280, 730);
+            doc.text('Sistema de Asignaciones 1.0 - Ministerio de las Culturas', 280, 730);
 
             doc.end();
 
