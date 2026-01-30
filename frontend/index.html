@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Asignación Maternal | Ministerio de las Culturas</title>
+    <meta name="description" content="Sistema de gestión de asignación maternal para funcionarias del Ministerio de las Culturas, las Artes y el Patrimonio de Chile">
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="/assets/logo_ministerio.png" alt="Logo Ministerio" class="logo">
+            <h2>Asignación Maternal</h2>
+        </div>
+        
+        <ul class="nav-menu">
+            <li class="nav-item active" data-section="dashboard">
+                <span class="nav-icon">📊</span>
+                <span>Dashboard</span>
+            </li>
+            <li class="nav-item" data-section="nueva-solicitud">
+                <span class="nav-icon">➕</span>
+                <span>Nueva Solicitud</span>
+            </li>
+            <li class="nav-item" data-section="listado">
+                <span class="nav-icon">📋</span>
+                <span>Listado de Solicitudes</span>
+            </li>
+            <li class="nav-item" data-section="reportes">
+                <span class="nav-icon">📄</span>
+                <span>Reportes</span>
+            </li>
+            <li class="nav-item" data-section="configuracion">
+                <span class="nav-icon">⚙️</span>
+                <span>Configuración</span>
+            </li>
+        </ul>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <span class="user-avatar">👤</span>
+                <div>
+                    <span class="user-name" id="userName">Usuario</span>
+                    <span class="user-role" id="userRole">Administrador</span>
+                </div>
+            </div>
+            <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-header">
+            <button class="menu-toggle" id="menuToggle">☰</button>
+            <h1 id="pageTitle">Dashboard</h1>
+            <div class="header-actions">
+                <button class="btn-theme" id="btnTheme" title="Cambiar tema">🌓</button>
+            </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <section class="content-section active" id="section-dashboard">
+            <div class="dashboard-grid">
+                <div class="stat-card primary">
+                    <div class="stat-icon">📝</div>
+                    <div class="stat-info">
+                        <h3 id="totalSolicitudes">0</h3>
+                        <p>Total Solicitudes</p>
+                    </div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <h3 id="solicitudesAprobadas">0</h3>
+                        <p>Aprobadas</p>
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-info">
+                        <h3 id="solicitudesPendientes">0</h3>
+                        <p>Pendientes</p>
+                    </div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-info">
+                        <h3 id="montoTotal">$0</h3>
+                        <p>Monto Total</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-charts">
+                <div class="chart-card">
+                    <h3>Solicitudes por Estado</h3>
+                    <div class="chart-container" id="chartEstados"></div>
+                </div>
+                <div class="chart-card">
+                    <h3>Solicitudes por Departamento</h3>
+                    <div class="chart-container" id="chartDepartamentos"></div>
+                </div>
+            </div>
+
+            <div class="recent-activity">
+                <h3>Actividad Reciente</h3>
+                <div class="activity-list" id="actividadReciente"></div>
+            </div>
+        </section>
+
+        <!-- Nueva Solicitud Section -->
+        <section class="content-section" id="section-nueva-solicitud">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Nueva Solicitud de Asignación Maternal</h2>
+                    <p>Complete todos los campos requeridos para registrar una nueva solicitud</p>
+                </div>
+
+                <form id="formSolicitud" class="solicitud-form">
+                    <div class="form-grid">
+                        <div class="form-section">
+                            <h3>Datos de la Funcionaria</h3>
+                            
+                            <div class="form-group">
+                                <label for="rut">RUT *</label>
+                                <input type="text" id="rut" name="rut_funcionaria" required 
+                                       placeholder="12.345.678-9" maxlength="12">
+                                <span class="field-error" id="error-rut"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="nombre">Nombre Completo *</label>
+                                <input type="text" id="nombre" name="nombre_completo" required
+                                       placeholder="María González Pérez">
+                                <span class="field-error" id="error-nombre"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="departamento">Departamento/Unidad *</label>
+                                <input type="text" id="departamento" name="departamento_unidad" required
+                                       placeholder="Ej: Subsecretaría del Patrimonio" list="departamentos">
+                                <datalist id="departamentos"></datalist>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Correo Institucional *</label>
+                                <input type="email" id="email" name="correo_electronico" required
+                                       placeholder="maria.gonzalez@cultura.gob.cl">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="telefono">Teléfono</label>
+                                <input type="tel" id="telefono" name="telefono"
+                                       placeholder="912345678">
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Datos del Embarazo</h3>
+                            
+                            <div class="form-group">
+                                <label for="fechaInicioEmbarazo">Fecha Inicio de Embarazo *</label>
+                                <input type="date" id="fechaInicioEmbarazo" name="fecha_inicio_embarazo" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="fechaNacimiento">Fecha de Nacimiento (si ya nació)</label>
+                                <input type="date" id="fechaNacimiento" name="fecha_nacimiento">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="fechaIngresoSolicitud">Fecha Ingreso Solicitud *</label>
+                                <input type="date" id="fechaIngresoSolicitud" name="fecha_ingreso_solicitud" required>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Datos Económicos</h3>
+                            
+                            <div class="form-group">
+                                <label for="sueldoBruto">Sueldo Bruto Mensual *</label>
+                                <div class="input-with-prefix">
+                                    <span class="input-prefix">$</span>
+                                    <input type="number" id="sueldoBruto" name="sueldo_bruto_mensual" required
+                                           placeholder="850000" min="0">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="observaciones">Observaciones</label>
+                                <textarea id="observaciones" name="observaciones" rows="3"
+                                          placeholder="Observaciones adicionales..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="preview-calculo" id="previewCalculo" style="display: none;">
+                        <h3>Vista Previa del Cálculo</h3>
+                        <div class="calculo-grid">
+                            <div class="calculo-item">
+                                <label>Tramo:</label>
+                                <span id="previewTramo">-</span>
+                            </div>
+                            <div class="calculo-item">
+                                <label>Monto Mensual:</label>
+                                <span id="previewMontoMensual">-</span>
+                            </div>
+                            <div class="calculo-item">
+                                <label>Meses Retroactivos:</label>
+                                <span id="previewMesesRetro">-</span>
+                            </div>
+                            <div class="calculo-item">
+                                <label>Total Retroactivo:</label>
+                                <span id="previewTotalRetro">-</span>
+                            </div>
+                            <div class="calculo-item">
+                                <label>Meses Futuros:</label>
+                                <span id="previewMesesFuturo">-</span>
+                            </div>
+                            <div class="calculo-item">
+                                <label>Total Futuro:</label>
+                                <span id="previewTotalFuturo">-</span>
+                            </div>
+                            <div class="calculo-item total">
+                                <label>MONTO TOTAL A PAGAR:</label>
+                                <span id="previewTotalPagar">-</span>
+                            </div>
+                        </div>
+                        <div class="alertas" id="alertasCalculo"></div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="btnCalcularPreview">
+                            Calcular Preview
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Guardar Solicitud
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Listado Section -->
+        <section class="content-section" id="section-listado">
+            <div class="listado-header">
+                <div class="filtros">
+                    <select id="filtroEstado" class="filtro-select">
+                        <option value="">Todos los estados</option>
+                        <option value="Ingresada">Ingresada</option>
+                        <option value="En Revisión">En Revisión</option>
+                        <option value="Aprobada">Aprobada</option>
+                        <option value="Pagada">Pagada</option>
+                        <option value="Rechazada">Rechazada</option>
+                    </select>
+                    <input type="text" id="filtroBusqueda" class="filtro-input" 
+                           placeholder="Buscar por nombre o RUT...">
+                    <button class="btn btn-secondary" id="btnBuscar">Buscar</button>
+                </div>
+                <button class="btn btn-primary" id="btnExportarExcel">
+                    📥 Exportar a Excel
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="tablaSolicitudes">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>RUT</th>
+                            <th>Nombre</th>
+                            <th>Departamento</th>
+                            <th>Tramo</th>
+                            <th>Monto Total</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodySolicitudes">
+                        <!-- Se llena dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Reportes Section -->
+        <section class="content-section" id="section-reportes">
+            <div class="reportes-grid">
+                <div class="reporte-card">
+                    <div class="reporte-icon">📄</div>
+                    <h3>Ficha Individual</h3>
+                    <p>Genera la ficha PDF de una funcionaria específica</p>
+                    <div class="reporte-actions">
+                        <input type="number" id="inputIdFicha" placeholder="ID Solicitud" 
+                               class="input-small">
+                        <button class="btn btn-primary" id="btnGenerarFicha">Generar PDF</button>
+                    </div>
+                </div>
+
+                <div class="reporte-card">
+                    <div class="reporte-icon">📊</div>
+                    <h3>Informe Consolidado</h3>
+                    <p>Genera un Excel con todas las solicitudes</p>
+                    <button class="btn btn-primary" id="btnGenerarConsolidado">Descargar Excel</button>
+                </div>
+
+                <div class="reporte-card">
+                    <div class="reporte-icon">📧</div>
+                    <h3>Enviar a Jefatura</h3>
+                    <p>Envía el reporte consolidado por correo</p>
+                    <input type="email" id="inputEmailJefatura" placeholder="correo@cultura.gob.cl"
+                           class="input-full">
+                    <button class="btn btn-secondary" id="btnEnviarJefatura">Enviar Reporte</button>
+                </div>
+            </div>
+
+            <div class="historial-correos">
+                <h3>Historial de Correos Enviados</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Destinatarios</th>
+                            <th>Asunto</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyHistorialCorreos"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Configuración Section -->
+        <section class="content-section" id="section-configuracion">
+            <div class="config-grid">
+                <div class="config-card">
+                    <h3>Valores de Asignación por Tramo</h3>
+                    <p class="config-description">Configure los montos y límites de cada tramo</p>
+                    
+                    <form id="formTramos" class="config-form">
+                        <div class="tramo-config">
+                            <h4>Tramo 1</h4>
+                            <div class="tramo-fields">
+                                <div class="form-group">
+                                    <label>Límite Superior</label>
+                                    <input type="number" id="tramo1Limite" value="631976">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monto Mensual</label>
+                                    <input type="number" id="tramo1Monto" value="22007">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tramo-config">
+                            <h4>Tramo 2</h4>
+                            <div class="tramo-fields">
+                                <div class="form-group">
+                                    <label>Límite Superior</label>
+                                    <input type="number" id="tramo2Limite" value="905941">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monto Mensual</label>
+                                    <input type="number" id="tramo2Monto" value="13505">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tramo-config">
+                            <h4>Tramo 3</h4>
+                            <div class="tramo-fields">
+                                <div class="form-group">
+                                    <label>Límite Superior</label>
+                                    <input type="number" id="tramo3Limite" value="1439668">
+                                </div>
+                                <div class="form-group">
+                                    <label>Monto Mensual</label>
+                                    <input type="number" id="tramo3Monto" value="4267">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </form>
+                </div>
+
+                <div class="config-card">
+                    <h3>Configuración SMTP</h3>
+                    <p class="config-description">Configure el servidor de correo para envío de reportes</p>
+                    
+                    <form id="formSMTP" class="config-form">
+                        <div class="form-group">
+                            <label>Servidor SMTP</label>
+                            <input type="text" id="smtpHost" placeholder="smtp.cultura.gob.cl">
+                        </div>
+                        <div class="form-group">
+                            <label>Puerto</label>
+                            <input type="number" id="smtpPort" value="587">
+                        </div>
+                        <div class="form-group">
+                            <label>Usuario</label>
+                            <input type="text" id="smtpUser" placeholder="usuario@cultura.gob.cl">
+                        </div>
+                        <div class="form-group">
+                            <label>Contraseña</label>
+                            <input type="password" id="smtpPass">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar Configuración</button>
+                    </form>
+                    
+                    <div class="smtp-status" id="smtpStatus"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Detalle Solicitud -->
+    <div class="modal" id="modalDetalle">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Detalle de Solicitud</h2>
+                <button class="modal-close" id="closeModalDetalle">&times;</button>
+            </div>
+            <div class="modal-body" id="modalDetalleBody">
+                <!-- Se llena dinámicamente -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btnDescargarPDF">📄 Descargar PDF</button>
+                <button class="btn btn-success" id="btnAprobar">✓ Aprobar</button>
+                <button class="btn btn-danger" id="btnRechazar">✗ Rechazar</button>
+                <button class="btn btn-primary" id="btnEnviarCorreo">📧 Enviar por Correo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Login -->
+    <div class="modal active" id="modalLogin">
+        <div class="modal-content modal-login">
+            <div class="login-header">
+                <img src="/assets/logo_ministerio.png" alt="Logo" class="login-logo">
+                <h2>Sistema de Asignación Maternal</h2>
+                <p>Ministerio de las Culturas, las Artes y el Patrimonio</p>
+            </div>
+            <form id="formLogin" class="login-form">
+                <div class="form-group">
+                    <label for="loginUsername">Usuario</label>
+                    <input type="text" id="loginUsername" required placeholder="usuario">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Contraseña</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Ingresar</button>
+                <p class="login-hint">Usuario por defecto: admin / admin123</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

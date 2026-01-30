@@ -1,0 +1,30 @@
+{
+  "name": "asignacion-maternal-mincultura",
+  "version": "1.0.0",
+  "description": "Sistema de Gestión de Asignación Maternal - Ministerio de las Culturas, las Artes y el Patrimonio",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node backend/server.js",
+    "test": "node backend/tests/test.js"
+  },
+  "keywords": [
+    "asignacion",
+    "maternal",
+    "ministerio",
+    "cultura",
+    "chile"
+  ],
+  "author": "Ministerio de las Culturas, las Artes y el Patrimonio - Chile",
+  "license": "ISC",
+  "dependencies": {
+    "sql.js": "^1.10.3",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "pdfkit": "^0.14.0",
+    "exceljs": "^4.4.0",
+    "nodemailer": "^6.9.8",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
