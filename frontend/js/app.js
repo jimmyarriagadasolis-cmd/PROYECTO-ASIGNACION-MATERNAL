@@ -3,7 +3,6 @@
  * Ministerio de las Culturas, las Artes y el Patrimonio - Chile
  */
 
-// Estado de la aplicación
 const state = {
     usuario: null,
     token: null,
@@ -11,7 +10,9 @@ const state = {
     solicitudes: []
 };
 
-const API_URL = '/api';
+// IMPORTANTE: Actualizar esta URL después del deployment de Firebase
+// Será algo como: https://us-central1-TU_PROJECT_ID.cloudfunctions.net/api
+const API_URL = 'https://us-central1-TU_PROJECT_ID.cloudfunctions.net/api'; // URL de Cloud Functions
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {

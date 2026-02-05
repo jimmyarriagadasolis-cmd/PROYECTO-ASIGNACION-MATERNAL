@@ -1,0 +1,47 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "solicitudes",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "estado_solicitud",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "fecha_registro",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "solicitudes",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "departamento_unidad",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "fecha_registro",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "solicitudes",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "tramo_asignacion",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "fecha_registro",
+                    "order": "DESCENDING"
+                }
+            ]
+        }
+    ],
+    "fieldOverrides": []
+}

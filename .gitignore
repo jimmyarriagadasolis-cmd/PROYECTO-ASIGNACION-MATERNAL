@@ -9,28 +9,40 @@ yarn-error.log*
 .env.local
 .env.*.local
 
-# Logs
-logs/
-*.log
+# Node modules
+node_modules/
+package-lock.json
 
-# Base de datos local
-*.db
-*.sqlite
-*.sqlite3
+# SQLite database (original local version)
+data/*.db
+data/*.sqlite
 
-# Archivos temporales
-tmp/
-temp/
-*.tmp
+# Generated reports
+reports/*.pdf
+reports/*.xlsx
 
-# Sistema operativo
+# Backups
+backups/
+
+# Environment variables
+.env
+.env.local
+
+# OS files
 .DS_Store
 Thumbs.db
-desktop.ini
 
-# IDEs
+# IDE files
 .vscode/
 .idea/
+
+# Firebase
+.firebase/
+functions/node_modules/
+functions/.env
+firebase-config.js
+serviceAccountKey.json
+.firebaserc
 *.swp
 *.swo
 *~

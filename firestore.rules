@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserRole() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'administrador';
+    }
+    
+    function isRRHH() {
+      return isAuthenticated() && getUserRole() == 'rrhh';
+    }
+    
+    function isJefatura() {
+      return isAuthenticated() && getUserRole() == 'jefatura';
+    }
+    
+    function canWrite() {
+      return isAdmin() || isRRHH() || isJefatura();
+    }
+    
+    function canRead() {
+      return isAuthenticated(); // Todos los usuarios autenticados pueden leer
+    }
+    
+    // Reglas para solicitudes
+    match /solicitudes/{solicitudId} {
+      allow read: if canRead();
+      allow create: if canWrite();
+      allow update: if canWrite();
+      allow delete: if isAdmin();
+    }
+    
+    // Reglas para usuarios
+    match /usuarios/{userId} {
+      allow read: if canRead();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || request.auth.uid == userId; // Los usuarios pueden actualizar su propio perfil
+      allow delete: if isAdmin();
+    }
+    
+    // Reglas para configuración
+    match /configuracion/{configId} {
+      allow read: if canRead();
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para logs de auditoría
+    match /logs_auditoria/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Los logs no se modifican ni eliminan
+    }
+    
+    // Reglas para historial de correos
+    match /historial_correos/{correoId} {
+      allow read: if canRead();
+      allow create: if canWrite();
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+  }
+}
