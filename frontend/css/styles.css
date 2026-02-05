@@ -1261,3 +1261,17 @@ body {
     font-weight: 700;
     color: var(--primary-900);
 }
+
+/* Clases de ayuda y feedback */
+.form-help {
+    display: block;
+    margin-top: 5px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.form-help i {
+    color: var(--primary-500);
+    margin-right: 4px;
+}

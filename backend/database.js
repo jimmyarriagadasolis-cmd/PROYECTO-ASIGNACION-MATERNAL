@@ -116,7 +116,7 @@ async function initDatabase() {
     const configInicial = [
         ['tramo1_limite', '631976', 'Límite superior del Tramo 1'],
         ['tramo1_monto', '22007', 'Monto mensual Tramo 1'],
-        ['tramo2_limite', '905941', 'Límite superior del Tramo 2'],
+        ['tramo2_limite', '923067', 'Límite superior del Tramo 2'],
         ['tramo2_monto', '13505', 'Monto mensual Tramo 2'],
         ['tramo3_limite', '1439668', 'Límite superior del Tramo 3'],
         ['tramo3_monto', '4267', 'Monto mensual Tramo 3'],

@@ -1,0 +1,5 @@
+$(function(){
+  $(".articulo .table").each(function(){
+    $(this).wrapAll("<"+"div class='table-responsive'><"+"/div>");
+  });
+});

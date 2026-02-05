@@ -1,0 +1,80 @@
+function doSearch(url,cid) {
+
+	// Delete search's cookies
+	if( "exists".match ) {
+		var results = document.cookie.match(/\w+=/g);
+		if( results ) {
+			for( var i=0; i < results.length; i++ ) {
+				if( results[i].substring(0,7) == 'search_' ) {
+					deleteCookie( results[i].substring(0,results[i].length-1) );
+				}
+			}
+		}
+	}
+
+	var texto = [];
+	if( $("#keywords").val().trim().length > 0 ){
+		texto.push($("#keywords").val().trim());
+	}
+	texto = texto.join(" ").replace(/\s+/," ").trim();
+	var now = new Date();
+	now.setMinutes(now.getMinutes()+15);
+	deleteCookie("hl_words");
+	deleteCookie("hl_phrase");
+	setCookie("hl_words", texto, location.host + "; expires="+now.toGMTString());
+	setCookie('hl_phrase', texto, location.host + "; expires="+now.toGMTString());
+
+
+	setCookie('search_keywords',texto);
+	setCookie('search_start', 0 );
+	setCookie('search_group', 1 );
+	setCookie('search_show_ancestors', 1 );
+	//setCookie('search_pvid_not', "500:500,506,511,516,520,522,523,524,525,526,10320,10345,10374,10375,30689,30954,30971,33968,34007,34009,34954,34996");
+	setCookie('search_pvid_not', "500:" 
+		 + "500" // Asociado a actualidad
+		 + ",506" // Asociado a legislación y normativa
+		 + ",511" // Asociado a servicios y trámites
+		 + ",516" // Asociado a publicaciones
+		 + ",520" // Asociado a Estadísticas
+		 + ",522" // Indicadores
+		 + ",523" // Gráficos subsidios maternales
+		 + ",524" // Asociado a institucionalidad SUSESO
+		 + ",525" // Contenido institucional
+		 + ",526" // Tipo de Contenido sin definir
+		 + ",10320" // Asociado a orientación
+		 + ",10345" // Asociado a fiscalización
+		 + ",10374" // Asociado a Funcionalidad
+		 + ",10375" // Ficha de sitio
+		 + ",30689" // Ficha de acceso
+		 + ",30954" // Ficha glosario
+		 + ",30971" // Ficha tema o parte de un especial
+		 + ",33968" // Variables estadísticas
+		 + ",34007" // Ficha de destacado marquesina SUSESO
+		 + ",34009" // Presentación extendida
+		 + ",34996" // Presentación portadilla
+		 + ",139966" // Versiones anteriores en pdf
+		 + ",206334" // Nota personalizada
+		 + ",664016" // Nota de actualización C. L18833
+		 + ",664017" // Versión anterior en pdf C. L18833
+		 + ",749207" // Nota de actualización C. SBSP
+		 + ",749208" // Versión anterior en pdf C. SBSP
+		 + ",768225" // Nota de actualización C. LMSIL
+		 + ",768226" // Versión anterior en pdf C. LMSIL
+		 + ",526" // Tipo de Contenido sin definir
+		 + ",137401" // Ficha especial 
+	);
+	document.location.href=url;
+	return false;
+}
+
+$(document).ready(function(){
+	$( "#keywords" ).keypress(function( event ) {
+		if ( event.which == 13 ) {
+			event.preventDefault();
+			$("#boton_busqueda").trigger("click");
+		}
+	});
+	$('.buscar.dropdown').on('shown.bs.dropdown', function () {
+  		$( "#keywords" ).focus();
+	})
+});

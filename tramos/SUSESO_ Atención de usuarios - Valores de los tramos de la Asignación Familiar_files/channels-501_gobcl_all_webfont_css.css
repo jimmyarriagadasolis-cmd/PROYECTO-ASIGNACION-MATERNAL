@@ -1,0 +1,71 @@
+@charset "utf-8";
+/* CSS Document */
+/*
+'channels-501_gobcl_bold_webfont_eot.eot'
+'channels-501_gobcl_bold_webfont_woff.woff'
+'channels-501_gobcl_bold_webfont_ttf.ttf'
+'channels-501_gobcl_bold_webfont_svg.svg'
+
+'channels-501_gobcl_light_webfont_eot.eot'
+'channels-501_gobcl_light_webfont_woff.woff'
+'channels-501_gobcl_light_webfont_ttf.ttf'
+'channels-501_gobcl_light_webfont_svg.svg'
+
+'channels-501_gobcl_regular_webfont_eot.eot'
+'channels-501_gobcl_regular_webfont_woff.woff'
+'channels-501_gobcl_regular_webfont_ttf.ttf'
+'channels-501_gobcl_regular_webfont_svg.svg'
+
+'channels-501_gobcl_heavy_webfont_eot.eot'
+'channels-501_gobcl_heavy_webfont_woff.woff'
+'channels-501_gobcl_heavy_webfont_ttf.ttf'
+'channels-501_gobcl_heavy_webfont_svg.svg'
+*/
+@font-face {
+  font-family: gobCL;
+  src: 
+url('channels-501_gobcl_bold_webfont_eot.eot');
+  src: 
+url('channels-501_gobcl_bold_webfont_eot.eot?#iefix') format('embedded-opentype'), 
+url('channels-501_gobcl_bold_webfont_woff.woff') format('woff'), 
+url('channels-501_gobcl_bold_webfont_ttf.ttf') format('truetype'), 
+url('channels-501_gobcl_bold_webfont_svg.svg#gobCLBold') format('svg');
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: gobCL;
+  src: 
+url('channels-501_gobcl_light_webfont_eot.eot');
+  src: 
+url('channels-501_gobcl_light_webfont_eot.eot?#iefix') format('embedded-opentype'), 
+url('channels-501_gobcl_light_webfont_woff.woff') format('woff'), 
+url('channels-501_gobcl_light_webfont_ttf.ttf') format('truetype'), 
+url('channels-501_gobcl_light_webfont_svg.svg#gobCLLight') format('svg');
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face {
+  font-family: gobCL;
+  src: 
+url('channels-501_gobcl_regular_webfont_eot.eot');
+  src: 
+url('channels-501_gobcl_regular_webfont_eot.eot?#iefix') format('embedded-opentype'), 
+url('channels-501_gobcl_regular_webfont_woff.woff') format('woff'), 
+url('channels-501_gobcl_regular_webfont_ttf.ttf') format('truetype'), 
+url('channels-501_gobcl_regular_webfont_svg.svg#gobCLRegular') format('svg');
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: gobCL;
+  src: 
+url('channels-501_gobcl_heavy_webfont_eot.eot');
+  src: 
+url('channels-501_gobcl_heavy_webfont_eot.eot?#iefix') format('embedded-opentype'), 
+url('channels-501_gobcl_heavy_webfont_woff.woff') format('woff'), 
+url('channels-501_gobcl_heavy_webfont_ttf.ttf') format('truetype'), 
+url('channels-501_gobcl_heavy_webfont_svg.svg#gobCLRegular') format('svg');
+  font-weight: 900;
+  font-style: normal;
+}

@@ -1,0 +1,189 @@
+/*
+ * ntg_link_video
+ * written by Hrodrigu
+ * http://www.newtenberg.com
+ * GPL (GPL-LICENSE.txt) licenses.
+ * Built for jQuery library
+ * http://jquery.com
+ * $Id: ntg_link_video.js 700 2014-08-27 00:24:28Z hrodrigu $
+ */
+(function($){
+	$.fn.ntg_link_video = function(options){
+		var params = [];
+		for(var i=1; i<arguments.length;i++){
+			params.push(arguments[i]);
+		}
+		var defaults = {
+			"youtubeTemplate":'<'+'div class="embed-responsive embed-responsive-16by9">'+
+							'<'+'iframe title="{{title}}" class="embed-responsive-item" src="{{protocol}}://www.youtube.com/embed/{{videoid}}" frameborder="0" allowfullscreen>No iframes<'+'/iframe>'+
+							'<'+'/div>',
+			"facebookTemplate":'<'+'div class="video-facebook">'+
+							'<'+'iframe title="{{title}}" src="https://www.facebook.com/plugins/video.php?href={{url}}&show_text=0" width="{{width}}" height="{{height}}" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowTransparency="true" allowFullScreen="true"><'+''+'/iframe>'+
+							'<'+'/div>',
+			"vimeoTemplate":'<'+'div class="video-vimeo">'+
+				'<iframe title="{{title}}" src="{{protocol}}://player.vimeo.com/video/{{videoid}}" '+
+			   	'width="{{width}}" height="{{height}}" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen>No iframes</iframe>'+
+							'<'+'/div>',
+			"aspectRatio":16/9, // numero de la proporcion ancho / alto
+			"width":"100%", // numero de pixeles, porcentaje "x%", "auto" que depende del ancho del contenedor
+			"height": "auto",// numero de pixeles, porcentaje "x%", "auto" que depende del ancho y al aspectRatio
+			"debug":false 
+		};
+		if (typeof(options) ==='object' || typeof(options) ==='undefined' ){
+			return this.each(function(){
+				var obj = {};
+				obj.dom = this;
+				obj.opts = $.extend(defaults, options);
+				obj.var_interna = 0;
+				obj.init = function(force){
+					if (typeof($(obj.dom).data("NTG_link_VIDEO_INSTANCE")) != "undefined"  && typeof(force) == "undefined"){
+						return;
+					}
+					//init plugin
+					debug("init");
+					obj.revertAnchors = [];
+					
+					if($(obj.dom).get(0).nodeName === 'A' && $(obj.dom).attr("h"+"ref").length > 0){
+						processAnchor(obj.dom, calculateSize(obj.dom));
+					}else{
+						$('a', obj.dom).each(function(){
+							processAnchor(this, calculateSize(this));
+						});
+					}
+					//se guarda la instancia el propio nodo DOM
+					$(obj.dom).data("NTG_link_VIDEO_INSTANCE",obj);
+				};
+				// Calcula el ancho y alto efectivo dependiendo de las opciones	
+				function calculateSize(element){
+					var cont_width = $(element).parent().innerWidth();
+					var cont_height = $(element).parent().innerHeight();
+					var cont_aspect = cont_width / (cont_height > 0 ? cont_height: 1);
+					var width,height;
+					var aspect = obj.opts.aspectRatio;
+					var classparent = $(element).parents("[class]").first().attr("class");
+					if("undefined" != typeof(classparent) && classparent.search(/binary-[^\ ]+/) != -1){
+						var aspect_m = classparent.match(/binary-[a-z0-9_]*_(16a9|4a3|1a1)/) ;
+						if(aspect_m != null){
+							aspect = eval(aspect_m[1].replace("a","/"));
+						}
+					}
+					if(typeof(obj.opts.width) === "string" && obj.opts.width == "auto" && typeof(obj.opts.height) === "string" && obj.opts.height == "auto"){
+						if(aspect < cont_aspect){
+							height = cont_height;
+							width = Math.round(height * aspect);
+						}else{
+							width = cont_width;
+							height = Math.round(width / aspect);
+						}
+					}else{
+						if(typeof(obj.opts.width) === "string" && (obj.opts.width.search(/[0-9]{1,2}%/) != -1 || obj.opts.width == "auto") ){
+							if( obj.opts.width == "auto"){
+								width = $(element).parent().innerWidth();
+							}else{
+								width = obj.opts.width;
+							}
+						}else{
+							width = obj.opts.width;
+						}
+						if(typeof(obj.opts.height) === "string" &&  (obj.opts.height.search(/[0-9]{1,2}%/) != -1 || obj.opts.height == "auto")){
+							if( obj.opts.height == "auto" ){
+								var percent = 1;
+								if(typeof(obj.opts.width) == "string" && null != obj.opts.width.match(/[0-9]{1,2}%/)){
+									percent = parseInt(obj.opts.width.replace("%","")) / 100 ; 
+									height = Math.round($(element).parent().innerWidth() * percent  / aspect);
+								}else{
+									height = Math.round(width / aspect);
+								}
+							}else{
+								height = obj.opts.height;
+							}
+						}else{
+							height = obj.opts.height;
+						}
+					}
+					return {width:width, height:height};
+				}
+				function processAnchor(anchor, size){
+					var h_ref= $(anchor).attr('h'+'ref');
+					var title = $(anchor).attr('title');
+					var iframehtml="";
+
+					debug("procesando "+h_ref);
+
+					var m_youtube = h_ref.match(/(https?):\/\/(www.youtube.com|youtu.be|www.youtube-nocookie.com|m.youtube.com)\/(watch\?v=|watch\/|playlist\?list=|embed\/|)([^&]*)/);
+					var m_facebook = h_ref.match(/(https?):\/\/(www.facebook.com)(\/plugins\/video.php\?href=|\/[^\/]*\/videos\/.*)([^&]*)/);
+					var m_vimeo = h_ref.match(/(https?):\/\/(vimeo.com)\/([0-9]*)/);
+
+					if (m_youtube != null){
+						iframehtml = obj.opts.youtubeTemplate
+							.replace(/{{protocol}}/g,m_youtube[1])
+							.replace(/{{videoid}}/g,m_youtube[4])
+							.replace(/{{title}}/g,title)
+							.replace(/{{width}}/g,size.width)
+							.replace(/{{height}}/g,size.height) ;
+					}else if(m_facebook != null){
+						if(m_facebook[4] == ""){
+							// url directa
+							iframehtml = obj.opts.facebookTemplate
+								.replace(/{{protocol}}/g,m_facebook[1])
+								.replace(/{{url}}/g,encodeURIComponent(m_facebook[0]))
+								.replace(/{{title}}/g,title)
+								.replace(/{{width}}/g,size.width)
+								.replace(/{{height}}/g,size.height) ;
+						}else{
+							iframehtml = obj.opts.facebookTemplate
+								.replace(/{{protocol}}/g,m_facebook[1])
+								.replace(/{{url}}/g,m_facebook[4])
+								.replace(/{{title}}/g,title)
+								.replace(/{{width}}/g,size.width)
+								.replace(/{{height}}/g,size.height) ;
+						}
+					}else if(m_vimeo != null){
+						iframehtml = obj.opts.vimeoTemplate
+							.replace(/{{protocol}}/g,m_vimeo[1])
+							.replace(/{{videoid}}/g,m_vimeo[3])
+							.replace(/{{title}}/g,title)
+							.replace(/{{width}}/g,size.width)
+							.replace(/{{height}}/g,size.height) ;
+					}
+					if(iframehtml !== ""){
+						var copia = $(anchor).clone();
+						var iframe = $(iframehtml).data("NTG_LINK_VIDEO_ANCHOR", copia);
+						$(anchor).replaceWith(iframe);
+						obj.revertAnchors.push(iframe);
+					}
+				}
+				function revertAnchors(){
+					$.each(obj.revertAnchors, function(i){
+						var a = $(this).data("NTG_LINK_VIDEO_ANCHOR");
+						$(this).replaceWith(a);
+					});
+
+				}
+				obj.destroy = function(){
+					revertAnchors();
+					$(obj.dom).removeData("NTG_link_VIDEO_INSTANCE");
+					return obj.dom;
+				}
+				function debug(msg){
+					if(obj.opts.debug && window.console){
+						window.console.log("ntg_link_video: "+ msg);
+					}
+				};
+				obj.init();
+			});
+		} else if(typeof(options)==='string'){
+			ret = this;
+			this.each(function(){
+				var instancia = $(this).data("NTG_link_VIDEO_INSTANCE");
+				if('undefined' != typeof(instancia) && 'function' === typeof(instancia[options])){
+					ret = instancia[options].apply(instancia,params);
+					return false;
+				}
+			});
+			return ret;
+		} else {
+			return this;
+		}
+	};
+})(jQuery);

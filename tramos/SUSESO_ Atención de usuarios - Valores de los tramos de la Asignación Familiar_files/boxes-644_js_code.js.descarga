@@ -1,0 +1,5 @@
+/* ALT_pa_descripcion_Compendios */
+
+$(function(){
+ $( "#ALT_pa_descripcion_Compendios p" ).addClass( "abstract" );
+}); 

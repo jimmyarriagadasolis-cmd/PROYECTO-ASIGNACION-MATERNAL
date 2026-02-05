@@ -209,7 +209,7 @@ async function calcularPreview() {
         fecha_inicio_embarazo: formData.get('fecha_inicio_embarazo'),
         fecha_nacimiento: formData.get('fecha_nacimiento') || null,
         fecha_ingreso_solicitud: formData.get('fecha_ingreso_solicitud'),
-        sueldo_bruto_mensual: formData.get('sueldo_bruto_mensual')
+        sueldo_bruto_mensual: (formData.get('sueldo_bruto_mensual') || '').toString().split(',')[0].replace(/\./g, '')
     };
 
     if (!datos.fecha_inicio_embarazo || !datos.fecha_ingreso_solicitud || !datos.sueldo_bruto_mensual) {
@@ -243,6 +243,17 @@ function mostrarPreviewCalculo(calculo) {
 
     document.getElementById('previewTramo').textContent = `Tramo ${calculo.tramo}`;
     document.getElementById('previewMontoMensual').textContent = formatMoney(calculo.montoMensual);
+
+    // Si hay promedio diferente del mensual (por reajustes), mostrarlo
+    const extraInfo = document.getElementById('previewExtraInfo') || document.createElement('div');
+    extraInfo.id = 'previewExtraInfo';
+    if (calculo.montoMensual !== calculo.montoPromedio) {
+        extraInfo.innerHTML = `<small class="text-muted">Monto promedio: ${formatMoney(calculo.montoPromedio)} (incluye reajustes de ley)</small>`;
+        document.getElementById('previewMontoMensual').parentNode.appendChild(extraInfo);
+    } else {
+        extraInfo.innerHTML = '';
+    }
+
     document.getElementById('previewMesesRetro').textContent = `${calculo.mesesRetroactivos} meses`;
     document.getElementById('previewTotalRetro').textContent = formatMoney(calculo.montoTotalRetroactivo);
     document.getElementById('previewMesesFuturo').textContent = `${calculo.mesesFuturos || 0} meses`;
@@ -259,6 +270,23 @@ function mostrarPreviewCalculo(calculo) {
     if (calculo.validacionPlazo && !calculo.validacionPlazo.valido) {
         alertas.innerHTML += '<div class="alerta warning">⚠️ ' + calculo.validacionPlazo.mensaje + '</div>';
     }
+
+    // Mostrar trazabilidad de cálculo
+    const debugSection = document.getElementById('debugCalculo');
+    const debugLogs = document.getElementById('debugLogs');
+
+    if (calculo.desgloseMensual && calculo.desgloseMensual.length > 0) {
+        debugSection.style.display = 'block';
+        debugLogs.innerHTML = calculo.desgloseMensual.map(mes => `
+            <div style="margin-bottom: 8px; border-bottom: 1px dashed #cbd5e0; padding-bottom: 4px;">
+                <strong>📅 ${mes.mesAño}:</strong> ${mes.detalleCalculo}<br>
+                <span style="color: #4a5568; font-size: 0.9em;">⚖️ Referencia: ${mes.leyVigente}</span><br>
+                <span style="color: #718096; font-size: 0.8em;">📅 Vigencia ley: ${mes.vigenciaRango}</span>
+            </div>
+        `).join('');
+    } else {
+        debugSection.style.display = 'none';
+    }
 }
 
 async function handleSubmitSolicitud(e) {
@@ -267,6 +295,12 @@ async function handleSubmitSolicitud(e) {
     const form = e.target;
     const formData = new FormData(form);
     const datos = Object.fromEntries(formData);
+
+    // Sanitizar sueldo bruto
+    if (datos.sueldo_bruto_mensual) {
+        datos.sueldo_bruto_mensual = datos.sueldo_bruto_mensual.toString().split(',')[0].replace(/\./g, '');
+    }
+
     datos.usuario_id = state.usuario?.id || 1;
 
     try {

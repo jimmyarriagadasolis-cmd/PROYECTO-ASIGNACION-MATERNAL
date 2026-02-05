@@ -1,0 +1,103 @@
+/*
+ * ntg_fontresizer
+ * written by Hrodrigu
+ * http://www.newtenberg.com
+ * GPL (GPL-LICENSE.txt) licenses.
+ * Built for jQuery library
+ * http://jquery.com
+ * $Id: ntg_fontresizer.js 700 2014-08-27 00:24:28Z hrodrigu $
+ */
+(function($){
+	$.fn.ntg_fontresizer = function(options){
+		var params = [];
+		for(var i=1; i<arguments.length;i++){
+			params.push(arguments[i]);
+		}
+		var defaults = {
+			"btnPlusSelector":".ntg-agrandar-texto",
+			"btnMinusSelector":".ntg-achicar-texto",
+			"disabledClass":"disabled",
+			"step": 0.2,
+			"debug":false 
+		};
+		if (typeof(options) ==='object' || typeof(options) ==='undefined' ){
+			return this.each(function(){
+				var obj = {};
+				obj.dom = this;
+				obj.opts = $.extend(defaults, options);
+				obj.init = function(force){
+					if (typeof($(obj.dom).data("NTG_FONTRESIZER_INSTANCE")) != "undefined"  && typeof(force) == "undefined"){
+						return;
+					}
+					//init plugin
+					debug("init");
+					var fs = $(obj.dom).css("font-size");
+					obj.btnPlus = $(obj.opts.btnPlusSelector);
+					obj.btnMinus = $(obj.opts.btnMinusSelector);
+					obj.sizeBase = fs.match(/([0-9]*\.*[0-9]*)(.*)/);
+					if( obj.sizeBase != null){
+						obj.current = obj.sizeBase[1];
+						if( $(obj.btnPlus).length > 0 && $(obj.btnMinus).length > 0 ){
+
+							$(obj.btnPlus).click(function(){
+								sizeUp();
+								debug("sizeUp "+ obj.current);	
+							});
+							$(obj.btnMinus).click(function(){
+								sizeDown();
+								debug("sizeDown "+ obj.current);	
+							})
+							.addClass(obj.opts.disabledClass);
+							//se guarda la instancia el propio nodo DOM
+							$(this).data("NTG_FONTRESIZER_INSTANCE",obj);
+						}else{
+							debug("No buttons found");	
+						}
+					}else{
+						debug("Fontsize base uknnown " + fs);	
+					}
+				};
+				function sizeDown(){
+					var new_fs = Math.max(obj.sizeBase[1], obj.current * (1.0 - obj.opts.step));
+					if(obj.current == new_fs){
+						obj.btnMinus.addClass(obj.opts.disabledClass);	
+					}else{
+						obj.btnMinus.removeClass(obj.opts.disabledClass);	
+						obj.btnPlus.removeClass(obj.opts.disabledClass);	
+						obj.current = new_fs;
+					}
+					$(obj.dom).css("font-size", new_fs + obj.sizeBase[2]);	
+				}
+				function sizeUp(){
+					var new_fs = Math.min(obj.sizeBase[1] * 2, obj.current *(1.0 + obj.opts.step));
+					if(obj.current == new_fs){
+						obj.btnPlus.addClass(obj.opts.disabledClass);	
+					}else{
+						obj.btnMinus.removeClass(obj.opts.disabledClass);	
+						obj.btnPlus.removeClass(obj.opts.disabledClass);	
+						obj.current = new_fs;
+					}
+					$(obj.dom).css("font-size", new_fs + obj.sizeBase[2]);	
+				}
+				function debug(msg){
+					if(obj.opts.debug && window.console){
+						window.console.log("ntg_fontresizer:" + msg);
+					}
+				};
+				obj.init();
+			});
+		} else if(typeof(options)==='string'){
+			ret = this;
+			this.each(function(){
+				var instancia = $(this).data("NTG_FONTRESIZER_INSTANCE");
+				if('undefined' != typeof(instancia) && 'function' === typeof(instancia[options])){
+					ret = instancia[options].apply(instancia,params);
+					return false;
+				}
+			});
+			return ret;
+		} else {
+			return this;
+		}
+	};
+})(jQuery);

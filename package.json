@@ -18,13 +18,14 @@
   "author": "Ministerio de las Culturas, las Artes y el Patrimonio - Chile",
   "license": "ISC",
   "dependencies": {
-    "sql.js": "^1.10.3",
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "pdfkit": "^0.14.0",
-    "exceljs": "^4.4.0",
-    "nodemailer": "^6.9.8",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2"
+    "cors": "^2.8.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.8",
+    "pdfkit": "^0.14.0",
+    "sql.js": "^1.10.3",
+    "xlsx": "^0.18.5"
   }
 }

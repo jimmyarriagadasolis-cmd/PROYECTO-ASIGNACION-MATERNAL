@@ -1,0 +1,30 @@
+$(function(){
+	$('.link_youtube a, a.link_youtube').ntg_link_video({
+		"youtubeTemplate": 
+		'<div class="ratio ratio-16x9">' +
+		'   <iframe title="video player youtube" class="" ' +
+		'       src="https://www.youtube.com/embed/{{videoid}}" frameborder="0" allowfullscreen>No iframes'+
+		'   </iframe>' +
+		'</div>'
+	});
+	$(".link_youtube a[href^='https://soundcloud.com']").each(function(i,a){
+		var href= $(a).attr("href");
+		var jqXHR = $.ajax({
+			type: "POST",
+			url: "https://soundcloud.com/oembed",
+			data: {
+				"format":"json",
+				"url":href
+			},
+			dataType: "json",
+			success: function(data,textStatus, jqXHR){
+				console.log(data);
+				if(textStatus == "success"){
+					$(jqXHR.data.a).replaceWith(data.html);
+				}
+			}
+
+		});
+		jqXHR.data = { a:a};
+	});
+});

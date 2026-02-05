@@ -4,6 +4,14 @@
  */
 
 const db = require('../database');
+/**
+ * Parsea una fecha en formato YYYY-MM-DD a un objeto Date local (evita desfase UTC)
+ */
+function parsearFechaLocal(fechaStr) {
+    if (!fechaStr) return null;
+    const [año, mes, día] = fechaStr.split('-').map(Number);
+    return new Date(año, mes - 1, día);
+}
 
 /**
  * Obtiene la configuración de tramos históricos según la fecha
@@ -11,7 +19,11 @@ const db = require('../database');
  * @returns {object} - Configuración de tramos vigente en esa fecha
  */
 function obtenerConfiguracionTramos(fecha = new Date()) {
-    const fechaBusqueda = typeof fecha === 'string' ? fecha : fecha.toISOString().split('T')[0];
+    // Asegurar que usamos la fecha en formato local YYYY-MM-DD para la query
+    const yyyy = fecha.getFullYear();
+    const mm = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dd = String(fecha.getDate()).padStart(2, '0');
+    const fechaBusqueda = `${yyyy}-${mm}-${dd}`;
 
     // Buscar valores históricos para esta fecha
     const valoresHistoricos = db.prepare(`
@@ -23,21 +35,9 @@ function obtenerConfiguracionTramos(fecha = new Date()) {
 
     if (valoresHistoricos) {
         return {
-            tramo1: {
-                min: valoresHistoricos.tramo1_ingreso_desde,
-                limite: valoresHistoricos.tramo1_ingreso_hasta,
-                monto: valoresHistoricos.tramo1_valor_unitario
-            },
-            tramo2: {
-                min: valoresHistoricos.tramo2_ingreso_desde,
-                limite: valoresHistoricos.tramo2_ingreso_hasta,
-                monto: valoresHistoricos.tramo2_valor_unitario
-            },
-            tramo3: {
-                min: valoresHistoricos.tramo3_ingreso_desde,
-                limite: valoresHistoricos.tramo3_ingreso_hasta,
-                monto: valoresHistoricos.tramo3_valor_unitario
-            },
+            tramo1: { min: valoresHistoricos.tramo1_ingreso_desde, limite: valoresHistoricos.tramo1_ingreso_hasta, monto: valoresHistoricos.tramo1_valor_unitario },
+            tramo2: { min: valoresHistoricos.tramo2_ingreso_desde, limite: valoresHistoricos.tramo2_ingreso_hasta, monto: valoresHistoricos.tramo2_valor_unitario },
+            tramo3: { min: valoresHistoricos.tramo3_ingreso_desde, limite: valoresHistoricos.tramo3_ingreso_hasta, monto: valoresHistoricos.tramo3_valor_unitario },
             leyReferencia: valoresHistoricos.ley_referencia,
             vigenciaDesde: valoresHistoricos.fecha_vigencia_desde,
             vigenciaHasta: valoresHistoricos.fecha_vigencia_hasta
@@ -45,7 +45,7 @@ function obtenerConfiguracionTramos(fecha = new Date()) {
     }
 
     // Fallback: usar valores actuales de la tabla Configuracion
-    console.warn(`⚠️  No se encontraron valores históricos para ${fechaBusqueda}, usando valores actuales`);
+    console.warn(`⚠️ No se encontraron valores históricos para ${fechaBusqueda}, usando valores actuales`);
     const config = {};
     const rows = db.prepare('SELECT clave, valor FROM Configuracion WHERE clave LIKE ?').all('tramo%');
     rows.forEach(row => {
@@ -59,19 +59,16 @@ function obtenerConfiguracionTramos(fecha = new Date()) {
 }
 
 /**
- * Determina el tramo de asignación según el sueldo bruto y la fecha
- * @param {number} sueldoBruto - Sueldo bruto mensual
- * @param {Date|string} fecha - Fecha para obtener valores vigentes
- * @returns {object} - { tramo: number, montoMensual: number, config: object }
+ * Determina el tramo de asignación según el sueldo imponible promedio y la fecha
  */
-function determinarTramo(sueldoBruto, fecha = new Date()) {
+function determinarTramo(sueldoImponible, fecha = new Date()) {
     const config = obtenerConfiguracionTramos(fecha);
 
-    if (sueldoBruto <= config.tramo1.limite) {
+    if (sueldoImponible <= config.tramo1.limite) {
         return { tramo: 1, montoMensual: config.tramo1.monto, config };
-    } else if (sueldoBruto <= config.tramo2.limite) {
+    } else if (sueldoImponible <= config.tramo2.limite) {
         return { tramo: 2, montoMensual: config.tramo2.monto, config };
-    } else if (sueldoBruto <= config.tramo3.limite) {
+    } else if (sueldoImponible <= config.tramo3.limite) {
         return { tramo: 3, montoMensual: config.tramo3.monto, config };
     } else {
         return { tramo: 4, montoMensual: 0, config };
@@ -79,50 +76,46 @@ function determinarTramo(sueldoBruto, fecha = new Date()) {
 }
 
 /**
- * Calcula los meses entre dos fechas
- * @param {Date} fechaInicio 
- * @param {Date} fechaFin 
- * @returns {number}
+ * Calcula los meses completos entre dos fechas
  */
 function calcularMesesEntre(fechaInicio, fechaFin) {
-    const inicio = new Date(fechaInicio);
-    const fin = new Date(fechaFin);
+    if (!fechaInicio || !fechaFin) return 0;
+    const inicio = new Date(fechaInicio.getFullYear(), fechaInicio.getMonth(), 1);
+    const fin = new Date(fechaFin.getFullYear(), fechaFin.getMonth(), 1);
 
     let meses = (fin.getFullYear() - inicio.getFullYear()) * 12;
     meses += fin.getMonth() - inicio.getMonth();
 
-    // Incluir el mes de inicio
     return Math.max(0, meses + 1);
 }
 
 /**
  * Genera el desglose mensual de pagos con valores históricos correctos
- * @param {Date} fechaInicio - Fecha inicio del embarazo
- * @param {number} cantidadMeses - Cantidad de meses
- * @param {number} sueldoBruto - Sueldo bruto mensual para determinar tramo
- * @returns {Array} - Array con desglose por mes con valores históricos
  */
-function generarDesgloseMensual(fechaInicio, cantidadMeses, sueldoBruto) {
+function generarDesgloseMensual(fechaInicio, cantidadMeses, sueldoImponible) {
     const desglose = [];
-    const fecha = new Date(fechaInicio);
+    const fecha = new Date(fechaInicio.getFullYear(), fechaInicio.getMonth(), 1);
 
-    const meses = [
+    const nombresMeses = [
         'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ];
 
     for (let i = 0; i < cantidadMeses; i++) {
-        // Obtener valores vigentes para este mes específico
-        const { montoMensual, tramo, config } = determinarTramo(sueldoBruto, fecha);
+        const { montoMensual, tramo, config } = determinarTramo(sueldoImponible, fecha);
 
         desglose.push({
-            mes: meses[fecha.getMonth()],
+            mes: nombresMeses[fecha.getMonth()],
             año: fecha.getFullYear(),
-            mesAño: `${meses[fecha.getMonth()]} ${fecha.getFullYear()}`,
+            mesAño: `${nombresMeses[fecha.getMonth()]} ${fecha.getFullYear()}`,
             monto: montoMensual,
             tramo: tramo,
-            fecha: fecha.toISOString().split('T')[0],
-            leyVigente: config.leyReferencia || 'N/A'
+            fecha: `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-01`,
+            leyVigente: config.leyReferencia || 'Valores actuales por defecto',
+            detalleCalculo: tramo === 4
+                ? `Sueldo (${formatearMoneda(sueldoImponible)}) excede Tramo 3`
+                : `Sueldo (${formatearMoneda(sueldoImponible)}) en Tramo ${tramo} (Límite: ${formatearMoneda(config[`tramo${tramo}`].limite)})`,
+            vigenciaRango: `${config.vigenciaDesde} a ${config.vigenciaHasta}`
         });
         fecha.setMonth(fecha.getMonth() + 1);
     }
@@ -132,23 +125,17 @@ function generarDesgloseMensual(fechaInicio, cantidadMeses, sueldoBruto) {
 
 /**
  * Valida si la solicitud está dentro del plazo legal (5 años)
- * @param {Date} fechaInicioEmbarazo 
- * @param {Date} fechaIngresoSolicitud 
- * @returns {object} - { valido: boolean, mensaje: string }
  */
 function validarPlazoLegal(fechaInicioEmbarazo, fechaIngresoSolicitud) {
     const configPlazo = db.prepare('SELECT valor FROM Configuracion WHERE clave = ?').get('plazo_maximo_años');
     const plazoMaximoAños = parseInt(configPlazo?.valor || 5);
 
-    const inicio = new Date(fechaInicioEmbarazo);
-    const ingreso = new Date(fechaIngresoSolicitud);
+    const diferenciaAños = (fechaIngresoSolicitud - fechaInicioEmbarazo) / (1000 * 60 * 60 * 24 * 365.25);
 
-    const añosDiferencia = (ingreso - inicio) / (1000 * 60 * 60 * 24 * 365);
-
-    if (añosDiferencia > plazoMaximoAños) {
+    if (diferenciaAños > plazoMaximoAños) {
         return {
             valido: false,
-            mensaje: `La solicitud está fuera del plazo legal de ${plazoMaximoAños} años`
+            mensaje: `La solicitud supera el plazo legal de ${plazoMaximoAños} años.`
         };
     }
 
@@ -162,16 +149,21 @@ function validarPlazoLegal(fechaInicioEmbarazo, fechaIngresoSolicitud) {
  */
 function calcularAsignacionMaternal(datos) {
     const {
-        fechaInicioEmbarazo,
-        fechaNacimiento,
-        fechaIngresoSolicitud,
+        fechaInicioEmbarazo: fechaInicioStr,
+        fechaNacimiento: fechaNacStr,
+        fechaIngresoSolicitud: fechaIngresoStr,
         sueldoBrutoMensual
     } = datos;
 
-    // Determinar tramo inicial (se recalculará mes a mes)
-    const { tramo, montoMensual, config } = determinarTramo(sueldoBrutoMensual, fechaInicioEmbarazo);
+    // Usar parsing local para evitar desfase UTC
+    const fechaInicio = parsearFechaLocal(fechaInicioStr);
+    const fechaIngreso = parsearFechaLocal(fechaIngresoStr);
+    const fechaNacimiento = parsearFechaLocal(fechaNacStr);
 
-    // Si es tramo 4, no tiene derecho
+    // Determinar tramo inicial y asegurar sueldo como entero
+    const sueldoLimpio = Math.floor(parseFloat(sueldoBrutoMensual) || 0);
+    const { tramo, montoMensual, config } = determinarTramo(sueldoLimpio, fechaInicio);
+
     if (tramo === 4) {
         return {
             tieneDerechos: false,
@@ -188,63 +180,50 @@ function calcularAsignacionMaternal(datos) {
     }
 
     // Validar plazo legal
-    const validacionPlazo = validarPlazoLegal(fechaInicioEmbarazo, fechaIngresoSolicitud);
+    const validacionPlazo = validarPlazoLegal(fechaInicio, fechaIngreso);
 
-    // Calcular fecha fin del embarazo
+    // Calcular fecha fin del embarazo (estimada o real)
     let fechaFinEmbarazo;
     if (fechaNacimiento) {
         fechaFinEmbarazo = new Date(fechaNacimiento);
     } else {
-        // Si no ha nacido, calcular 9 meses desde inicio
-        fechaFinEmbarazo = new Date(fechaInicioEmbarazo);
+        fechaFinEmbarazo = new Date(fechaInicio);
         fechaFinEmbarazo.setMonth(fechaFinEmbarazo.getMonth() + 9);
     }
 
-    const fechaIngreso = new Date(fechaIngresoSolicitud);
-    const fechaInicio = new Date(fechaInicioEmbarazo);
-
-    // Calcular meses totales de embarazo (máximo 9)
+    // Meses totales (máximo 9 por ley)
     let mesesTotalesEmbarazo = calcularMesesEntre(fechaInicio, fechaFinEmbarazo);
     mesesTotalesEmbarazo = Math.min(mesesTotalesEmbarazo, 9);
 
     // Calcular meses retroactivos (desde inicio hasta mes anterior a la solicitud)
-    let fechaMesAnteriorSolicitud = new Date(fechaIngreso);
-    fechaMesAnteriorSolicitud.setMonth(fechaMesAnteriorSolicitud.getMonth() - 1);
-
+    const fechaMesAnteriorSolicitud = new Date(fechaIngreso.getFullYear(), fechaIngreso.getMonth() - 1, 1);
     let mesesRetroactivos = calcularMesesEntre(fechaInicio, fechaMesAnteriorSolicitud);
     mesesRetroactivos = Math.max(0, Math.min(mesesRetroactivos, mesesTotalesEmbarazo));
 
-    // Calcular meses futuros (si aún no ha nacido o quedan meses por pagar)
+    // Calcular meses futuros
     let mesesFuturos = 0;
     if (fechaIngreso < fechaFinEmbarazo) {
-        mesesFuturos = calcularMesesEntre(fechaIngreso, fechaFinEmbarazo);
-        mesesFuturos = Math.min(mesesFuturos, mesesTotalesEmbarazo - mesesRetroactivos);
+        mesesFuturos = mesesTotalesEmbarazo - mesesRetroactivos;
     }
 
-    // ✨ GENERAR DESGLOSE CON VALORES HISTÓRICOS MES A MES
-    const desgloseRetroactivo = generarDesgloseMensual(fechaInicio, mesesRetroactivos, sueldoBrutoMensual);
+    // Generar desgloses con sueldo entero
+    const desgloseRetroactivo = generarDesgloseMensual(fechaInicio, mesesRetroactivos, sueldoLimpio);
 
-    let desgloseFuturo = [];
-    if (mesesFuturos > 0) {
-        const fechaInicioFuturo = new Date(fechaIngreso);
-        desgloseFuturo = generarDesgloseMensual(fechaInicioFuturo, mesesFuturos, sueldoBrutoMensual);
-    }
+    let fechaInicioFuturo = new Date(fechaInicio);
+    fechaInicioFuturo.setMonth(fechaInicioFuturo.getMonth() + mesesRetroactivos);
+    const desgloseFuturo = generarDesgloseMensual(fechaInicioFuturo, mesesFuturos, sueldoLimpio);
 
-    // Calcular montos totales sumando el desglose mensual real
     const montoTotalRetroactivo = desgloseRetroactivo.reduce((sum, mes) => sum + mes.monto, 0);
     const montoTotalFuturo = desgloseFuturo.reduce((sum, mes) => sum + mes.monto, 0);
     const montoTotalPagable = montoTotalRetroactivo + montoTotalFuturo;
 
-    // El monto mensual promedio para referencia
     const desgloseMensualCompleto = [...desgloseRetroactivo, ...desgloseFuturo];
-    const montoMensualPromedio = desgloseMensualCompleto.length > 0
-        ? montoTotalPagable / desgloseMensualCompleto.length
-        : montoMensual;
 
     return {
         tieneDerechos: true,
         tramo,
-        montoMensual: Math.round(montoMensualPromedio), // Promedio redondeado
+        montoMensual: desgloseMensualCompleto.length > 0 ? desgloseMensualCompleto[0].monto : montoMensual,
+        montoPromedio: desgloseMensualCompleto.length > 0 ? Math.round(montoTotalPagable / desgloseMensualCompleto.length) : montoMensual,
         mesesTotalesEmbarazo,
         mesesRetroactivos,
         montoTotalRetroactivo,
@@ -255,8 +234,8 @@ function calcularAsignacionMaternal(datos) {
         desgloseFuturo,
         desgloseMensual: desgloseMensualCompleto,
         validacionPlazo,
-        fechaInicioEmbarazo: fechaInicio.toISOString().split('T')[0],
-        fechaFinEmbarazo: fechaFinEmbarazo.toISOString().split('T')[0],
+        fechaInicioEmbarazo: `${fechaInicio.getFullYear()}-${String(fechaInicio.getMonth() + 1).padStart(2, '0')}-${String(fechaInicio.getDate()).padStart(2, '0')}`,
+        fechaFinEmbarazo: `${fechaFinEmbarazo.getFullYear()}-${String(fechaFinEmbarazo.getMonth() + 1).padStart(2, '0')}-${String(fechaFinEmbarazo.getDate()).padStart(2, '0')}`,
         configuracionVigente: config
     };
 }

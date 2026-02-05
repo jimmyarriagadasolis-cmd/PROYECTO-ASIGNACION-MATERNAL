@@ -1,0 +1,453 @@
+/*
+* $Id: ntg_datatables_filtros.js 1049 2021-05-04 20:08:27Z hrodrigu $
+* written by Hrodrigu
+* http://www.newtenberg.com
+* GPL (GPL-LICENSE.txt) licenses.
+* Built for jQuery library
+* http://jquery.com
+* Built for DataTables
+* https://datatables.net/
+*/
+(function($){
+$.fn.ntg_datatables_filtros = function(options){
+	var params = [];
+	for(var i=1; i<arguments.length;i++){
+		params.push(arguments[i]);
+	}
+	var defaults = {
+		dataTablesOptions:{
+			"language":{
+				"sProcessing":     "Procesando...",
+				"sLengthMenu":     "Mostrar _MENU_ registros",
+				"sZeroRecords":    "No se encontraron resultados",
+				"sEmptyTable":     "Ning&uacute;n dato disponible en esta tabla",
+				"sInfo":           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+				"sInfoEmpty":      "Mostrando registros del 0 al 0 de un total de 0 registros",
+				"sInfoFiltered":   "(filtrado de un total de _MAX_ registros)",
+				"sInfoPostFix":    "",
+				"sSearch":         "Buscar:",
+				"sUrl":            "",
+				"sInfoThousands":  ",",
+				"sLoadingRecords": "Cargando...",
+				"oPaginate": {
+					"sFirst":    "Primero",
+					"sLast":     "&Uacute;ltimo",
+					"sNext":     "Siguiente",
+					"sPrevious": "Anterior"
+				},
+				"oAria": {
+					"sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
+					"sSortDescending": ": Activar para ordenar la columna de manera descendente"
+				}
+			},
+			"lengthMenu": [ [10, 25, 50, -1], [10, 25, 50, "Todos"] ],
+			"dom": "<'row'<'col-sm-6'l><'col-sm-4'r><'col-sm-2'B>>" +
+				"<'row'<'col-sm-5'i><'col-sm-7'p>>"+
+				"<'row'<'col-sm-12'tr>>" ,
+			"buttons": [
+				"excel"
+			]
+		},
+		useForm:false,
+		submitButton:"" , // id del <button> enviar, cuando se usa formulario
+		clearButton:"" , // id del <button> limpiar, cuando se usa formulario
+		filterColumns:[
+			/* ejemplos
+			{
+				id:"col0",
+				type:"select",
+				defaultValue:"",
+				noFilterLabel:"",
+				order:"desc",
+				filterType:"exact"
+			},
+			{
+				id:"col1",
+				type:"input",
+				defaultValue:"",
+				noFilterLabel:"ingrese los t&eacute;rminos de b&uacute;squeda",
+				filterType:"phrase"
+			},
+			{
+				id:"col2",
+				type:"select",
+				defaultValue:"",
+				noFilterLabel:"*",
+				filterType:"or",
+				order:"asc",
+				wordSeparator:""
+			},
+			{
+				id:"col3",
+				type:"input",
+				defaultValue:"",
+				noFilterLabel:"ingrese los t&eacute;rminos de b&uacute;squeda",
+				filterType:"and"
+			},
+			{
+				id:"col1",
+				type:"range",
+					defaultValue:"",
+				},
+				*/
+				{
+					type:"none"
+				}
+			],
+			debug:false 
+		};
+		var tr= {"%C3%A1":"a", "%C3%A9":"e", "%C3%AD":"i", "%C3%B3":"o", "%C3%BA":"u"};
+		if (typeof(options) ==='object' || typeof(options) ==='undefined' ){
+			return this.each(function(){
+				var obj = {};
+				obj.dom = this;
+				obj.opts = $.extend(true,defaults, options);
+				obj.init = function(force){
+					if (this.nodeName != "TABLE" 
+							&& typeof($(obj.dom).data("NTG_DATATABLES_FILTROS_INSTANCE")) != "undefined"  
+							&& typeof(force) == "undefined"){
+						return;
+					}
+					//init plugin
+					debug("init ntg_datatables_filtros");
+					obj.coldef = obj.opts.filterColumns.slice();
+					for(var i=0; i < obj.coldef.length;i++){
+						if(obj.coldef[i].type == "select" ){
+							if("undefined" != typeof(obj.coldef[i].values) && $.isArray(obj.coldef[i].values)){ 
+								obj.coldef[i].predefvals = true;
+							}else{
+								obj.coldef[i].predefvals = false;
+								obj.coldef[i].values={};
+							}
+						}else if( obj.coldef[i].type == "range"){
+							obj.coldef[i].min = "3999-12.31T23:59";
+							obj.coldef[i].max = "0000-01-01T00:00";
+						}
+					}
+					// obtiene valores iniciales
+					var filas = $("tbody > tr",this.dom).each(function(){
+						$("td",this).each(function(i,el){
+							if(i < obj.coldef.length  && obj.coldef[i].type == "select"){ 
+								if( !obj.coldef[i].predefvals){ 
+									// identificar si contiene info de clasificandos
+									var estilo = " " + $("*[class]",this)
+										.filter(function(){ 
+											return $(this).attr("class").indexOf("pnid-") != -1;
+										}).attr("class");
+									var pnid= (estilo.search(/pnid-(\d*)/)!= -1 ? estilo.match(/pnid-(\d*)/)[1] : undefined);
+									var pvid= (estilo.search(/pvid-(\d*)/)!= -1 ? estilo.match(/pvid-(\d*)/)[1] : undefined);
+									var pid = (estilo.search(/pid-(\d*)/)!= -1 ? estilo.match(/pv-pid-(\d*)/)[1] : undefined);
+									var texto = $(this).text().trim();
+									if(texto.length > 0){
+										if(typeof(obj.coldef[i].wordSeparator) != "undefined" && 
+												obj.coldef[i].wordSeparator.length>0 && 
+												texto.indexOf(obj.coldef[i].wordSeparator) != -1){
+											var palabras = texto.split(obj.coldef[i].wordSeparator);
+											for(var j=0;j<palabras.length;j++){
+												obj.coldef[i].values[palabras[j].trim()]={};
+												obj.coldef[i].values[palabras[j].trim()].selected = 1;
+												if("undefined" != typeof(pnid)){
+													obj.coldef[i].values[palabras[j].trim()].pnid = pnid;
+													obj.coldef[i].values[palabras[j].trim()].pvid = pvid;
+													obj.coldef[i].values[palabras[j].trim()].pid = pid;
+												}
+											}
+										}else{
+											obj.coldef[i].values[texto]={};
+											obj.coldef[i].values[texto].selected = 1 ;
+											if("undefined" != typeof(pnid)){
+												obj.coldef[i].values[texto].pnid = pnid;
+												obj.coldef[i].values[texto].pvid = pvid;
+												obj.coldef[i].values[texto].pid = pid;
+											}
+										}
+									}
+								}
+							}else if(i < obj.coldef.length  && obj.coldef[i].type == "range"){ 
+								var estilo = $(this).attr("class");
+								var fecha = estilo.match(/iso8601-(\d\d\d\d)(\d\d)(\d\d)T(\d\d)(\d\d)/);
+								if( fecha != null){
+									var current = fecha[1] + "-"
+										+fecha[2] + "-"
+										+fecha[3] + "T"
+										+fecha[4] + ":"
+										+fecha[5];
+									$(this).prepend("<div class='hidden'>"
+											+ current
+											+"</div>");
+									obj.coldef[i].min = (obj.coldef[i].min.localeCompare(current) < 0 ?
+											obj.coldef[i].min   : current);
+									obj.coldef[i].max = (obj.coldef[i].max.localeCompare(current) >= 0 ?
+											obj.coldef[i].max   : current);
+								}
+							}
+						});
+					});
+					debug("init ntg_datatables_filtros filas="+filas.length);
+					var tr = $("<tr></tr>");
+					for(var i=0; i < obj.coldef.length;i++){
+						var estilo = $("thead > tr > th:eq("+i+")",this.dom).attr("class");
+						estilo = ("undefined" == typeof(estilo)?'':estilo.trim());
+						obj.coldef[i].className = estilo;
+						obj.coldef[i].filter = ("undefined" != typeof(obj.coldef[i].defaultValue)? obj.coldef[i].defaultValue :'');
+						if(obj.coldef[i].type == "input"){
+							// tipo de filtro de texto libre
+							if(obj.opts.useForm){
+								obj.coldef[i].input = $("#"+obj.coldef[i].id)
+								.attr("placeholder",obj.coldef[i].noFilterLabel);
+							}else{
+								obj.coldef[i].input = $("<input id='"+obj.coldef[i].id+"' type='text' class='filtro_input' placeholder='"+obj.coldef[i].noFilterLabel+"' \>");
+							}
+							$(obj.coldef[i].input)
+							.data("NTG_COL_NUMBER",i)
+							.data("NTG_INSTANCE",obj)
+							.keyup(function(ev){
+								var _this_instance = $(ev.target).data("NTG_INSTANCE")
+								_this_instance.coldef[$(ev.target).data("NTG_COL_NUMBER")].filter = $(this).val();
+								if(!_this_instance.opts.useForm){
+									_this_instance.table.draw();
+								}
+							});
+						} else if (obj.coldef[i].type == "select"){
+							// tipo de filtro con vocabulario controlado tipicamente un selector
+							if(obj.opts.useForm){
+								obj.coldef[i].input = $("#"+obj.coldef[i].id);
+								$(obj.coldef[i].input).children().remove();
+							}else{
+								obj.coldef[i].input = $("<select class='filtro_select' id='" +obj.coldef[i].id+"'></select>");
+							}
+							var optiondefault = $("<option  value=''>"+obj.coldef[i].noFilterLabel+"</option>")
+								.data("NTG_DATA",{pvid:0,pid:0});
+							$(obj.coldef[i].input)
+							.data("NTG_COL_NUMBER",i)
+							.data("NTG_INSTANCE",obj)
+							.change(function(ev){
+								var _this_instance = $(ev.target).data("NTG_INSTANCE")
+								_this_instance.coldef[$(ev.target).data("NTG_COL_NUMBER")].filter = $(this).val();
+								if(!_this_instance.opts.useForm){
+									_this_instance.table.draw();
+								}
+							})
+							.append(optiondefault);
+							if (!obj.coldef[i].predefvals){
+								var palabras = [];
+								for (var palabra in obj.coldef[i].values){
+									if(palabra.trim().length > 0 && obj.coldef[i].values.hasOwnProperty(palabra)){
+										palabras.push({"w":palabra, "d":obj.coldef[i].values[palabra]});
+									}
+								}
+								if( "function" == typeof(obj.coldef[i].order)){
+									palabras.sort(obj.coldef[i].order);
+								}else{
+									palabras.sort(function(a, b){
+										var x = a.w.toLowerCase(),y = b.w.toLowerCase();
+										return x<y ? -1 : x>y ? 1 : 0 ; 
+									});
+									if( obj.coldef[i].order == "desc"){
+										palabras.reverse();
+									}
+								}
+								for (var j=0; j< palabras.length;j++){
+									var selected = ""; 
+									if( palabras[j].selected == obj.coldef[i].filter ){
+										selected =  "selected='selected'";
+									}
+									$("<option "+selected+" value='"+palabras[j].w+"'>"+palabras[j].w+"</option>")
+									.data("NTG_DATA",palabras[j].d)
+									.appendTo(obj.coldef[i].input);
+								}
+							}else{
+								for (var j=0; j< obj.coldef[i].values.length;j++){
+									var selected = ""; 
+									if( obj.coldef[i].values[j] == obj.coldef[i].filter ){
+										selected =  "selected='selected'";
+									}
+									$("<option "+selected+" value='"+obj.coldef[i].values[j]+"'>"+obj.coldef[i].values[j]+"</option>")
+									.appendTo(obj.coldef[i].input);
+								}
+							}
+						} else if (obj.coldef[i].type == "range"){
+							// par de inputs de fecha que establece un rango
+							obj.coldef[i].filter = {};
+							if(obj.opts.useForm){
+
+								obj.coldef[i].inputFrom = $("#"+obj.coldef[i].id + "_from").attr("type","date")
+									.data("NTG_COL_NUMBER",i)
+									.data("NTG_INSTANCE",obj)
+								.change(function(ev){
+									var _this_instance = $(ev.target).data("NTG_INSTANCE");
+                                        _this_instance.coldef[$(ev.target).data("NTG_COL_NUMBER")].filter.from = $(ev.target).val();
+									$(_this_instance.coldef[$(ev.target).data("NTG_COL_NUMBER")].inputTo).attr("min",ev.date);
+								});
+								obj.coldef[i].inputTo = $("#"+obj.coldef[i].id + "_to").attr("type","date")
+									.data("NTG_COL_NUMBER",i)
+									.data("NTG_INSTANCE",obj)
+                                .change(function(ev){
+                                    var _this_instance = $(ev.target).data("NTG_INSTANCE");
+                                        _this_instance.coldef[$(ev.target).data("NTG_COL_NUMBER")].filter.to = $(ev.target).val();
+									$(_this_instance.coldef[$(ev.target).data("NTG_COL_NUMBER")].inputFrom).attr("max",ev.date);
+								});
+
+
+							}else{
+								obj.coldef[i].inputFrom = $("<input id='"+obj.coldef[i].id+"' type='date' class='filtro_input'  \>");
+								obj.coldef[i].inputTo = $("<input id='"+obj.coldef[i].id+"' type='date' class='filtro_input'  \>");
+								$(obj.coldef[i].inputFrom)
+							.data("NTG_COL_NUMBER",i)
+							.data("NTG_INSTANCE",obj)
+							.change(function(ev){
+								var _this_instance = $(ev.target).data("NTG_INSTANCE");
+									_this_instance.coldef[$(ev.target).data("NTG_COL_NUMBER")].filter.from = $(this).val();
+								if(!_this_instance.opts.useForm){
+									_this_instance.table.draw();
+								}
+							});
+							$(obj.coldef[i].inputTo)
+							.data("NTG_COL_NUMBER",i)
+							.data("NTG_INSTANCE",obj)
+							.change(function(ev){
+								var _this_instance = $(ev.target).data("NTG_INSTANCE");
+									_this_instance.coldef[$(ev.target).data("NTG_COL_NUMBER")].filter.to = $(this).val();
+								if(!_this_instance.opts.useForm){
+									_this_instance.table.draw();
+								}
+							});
+							}
+						}
+						if(!obj.opts.useForm){
+							// si se deben crear en la tabla los input de filtrado
+							var th = $("<th></th>")
+								.addClass(estilo);
+							if (obj.coldef[i].type == "none"){
+								$(th).text("&nbsp;");
+							} else if (obj.coldef[i].type == "range"){
+								$(th).append(obj.coldef[i].inputFrom);
+								$(th).append(obj.coldef[i].inputTo);
+							}else{
+								$(th).append(obj.coldef[i].input);
+							}
+							$(tr).append(th);
+						}
+					} // fin de for que recorre las definiciones
+					if(obj.opts.useForm){
+						$("#"+obj.opts.submitButton)
+							.data("NTG_INSTANCE",obj)
+							.click(function(){
+								var _this_instance = $(this).data("NTG_INSTANCE")
+								_this_instance.table.draw();
+							});
+						$("#"+obj.opts.clearButton)
+							.data("NTG_INSTANCE",obj)
+							.click(function(){
+								var _this_instance = $(this).data("NTG_INSTANCE")
+								for(var i=0; i < _this_instance.coldef.length;i++){
+									_this_instance.coldef[i].filter="";
+									if( _this_instance.coldef[i].type == "input"){
+										$( _this_instance.coldef[i].input).val("");
+									} else if( _this_instance.coldef[i].type == "select"){
+										$( _this_instance.coldef[i].input).val("");
+									} else if(_this_instance.coldef[i].type == "range"){
+										 _this_instance.coldef[i].inputFrom.val("");
+										 _this_instance.coldef[i].inputTo.val("");
+										_this_instance.coldef[i].filter = {};
+									}
+								}
+								_this_instance.table.draw();
+							});
+					}
+					obj.table = $(obj.dom).DataTable(obj.opts.dataTablesOptions);
+					$.fn.dataTable.ext.search.push(obj.filter);
+					if(!obj.opts.useForm){
+						$(tr).insertBefore("thead >tr", obj.dom);
+					}
+					//se guarda la instancia el propio nodo DOM
+					$(obj.dom).data("NTG_DATATABLES_FILTROS_INSTANCE",obj);
+				};
+				obj.hideTable = function(){
+					$(obj.table.table().container()).hide();
+				}
+				obj.showTable = function(){
+					$(obj.table.table().container()).show();
+				}
+				obj.getFiltros = function(){
+					return obj.coldef;
+				};
+				obj.filter = function( settings, data, dataIndex ) {
+					var ret = true;
+					var o = $(settings.oInstance).data("NTG_DATATABLES_FILTROS_INSTANCE");
+					if(typeof(o) !== "undefined" && typeof(o.coldef) !== "undefined"){
+						for(var i=0; i < o.coldef.length ;i++){
+							if(o.coldef[i].type != "none" && o.coldef[i].filter.length > 0){
+								var palabras = toASCII(o.coldef[i].filter.toLowerCase());
+								var dato = toASCII(data[i].toLowerCase());
+								if(o.coldef[i].filterType == "or"){
+									var palabras_arr = palabras.split(" ");
+									var r = false;
+									for(var j=0; j<palabras_arr.length;j++){
+										r =  r || (dato.indexOf( palabras_arr[j] ) != -1);
+									}
+									ret = ret && r;
+								}else if(o.coldef[i].filterType == "and"){
+									var palabras_arr = palabras.split(" ");
+									var r = true;
+									for(var j=0; j<palabras_arr.length;j++){
+										r =  r && (dato.indexOf( palabras_arr[j] ) != -1);
+									}
+									ret = ret && r;
+								}else if(o.coldef[i].filterType == "phrase"){
+									ret = ret && (dato.indexOf(palabras) != -1);
+								}else{
+									ret = ret && (dato == palabras);
+								}
+							} else if(o.coldef[i].type == "range"){
+								var dato = (data[i].toLowerCase());
+								var r = true;
+								if( o.coldef[i].filter.hasOwnProperty("from")){
+									var from = (o.coldef[i].filter.from);
+									dato = dato.substr(0, from.length);
+									r = r && from.localeCompare(dato) <=0 ;	
+								}
+								if( o.coldef[i].filter.hasOwnProperty("to")){
+									var to = (o.coldef[i].filter.to);
+									r = r && to.localeCompare(dato) >=0 ;	
+								}
+								ret = ret && r;
+							}
+						}
+					}
+					return ret;
+				};
+				function toASCII(txt){
+					var tx= txt.split("");
+					for(var i=0,l=tx.length ; i<l;i++){
+						var enc= encodeURIComponent(tx[i]);
+						if(typeof(tr[enc]) !== "undefined"){
+							tx[i] = tr[enc];
+						} 
+					}
+					return tx.join("");
+				}
+				function debug(msg){
+					if(obj.opts.debug && window.console){
+						window.console.log(msg);
+					}
+				};
+				obj.init();
+				obj.table.draw();
+			});
+		} else if(typeof(options)==='string'){
+			ret = this;
+			this.each(function(){
+				var instancia = $(this).data("NTG_DATATABLES_FILTROS_INSTANCE");
+				if('undefined' != typeof(instancia) && 'function' === typeof(instancia[options])){
+					ret = instancia[options].apply(instancia,params);
+					return false;
+				}
+			});
+			return ret;
+		} else {
+			return this;
+		}
+	};
+})(jQuery);
+

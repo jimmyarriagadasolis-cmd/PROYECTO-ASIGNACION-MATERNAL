@@ -1,0 +1,77 @@
+/* Agrega código CSS aquí */
+
+
+div#valor_completo_i__ss_pa_titulo_1 .page-header.pnid-632:before{
+	content:"Período: "
+
+}
+table#tabla_contencioso {
+	border: solid 1px #dddddd;
+}
+table#tabla_contencioso thead th 
+ 
+{
+	border-bottom: solid 1px #adacac;
+}
+#reporte_normativa_relevante {
+  display:none;
+}
+
+#tabla_contencioso thead th {
+  vertical-align: top;
+}
+.ntg-border-left {
+	border-left-style: solid;
+	border-left-width: 1px;
+	border-left-color: #ddd;
+}
+.acciones .btn-group {
+  width: 128px;
+}
+.estrellita-destacada {
+  color:#ffa100;
+}
+.hourglass-spin > [class*="fa-hourglass"] {
+  animation: showhide 2s steps(1) infinite;
+  opacity: 0;
+}
+.hourglass-spin > .fa-hourglass-end {
+  animation-delay: 1s;
+}
+.hourglass-spin > .fa-hourglass-half {
+  animation-delay: 0.5s;
+}
+.hourglass-spin > .fa-hourglass-start {
+  animation-delay: 0s;
+}
+.hourglass-spin > .fa-hourglass-end.spin {
+  animation: showhidespin 2s linear infinite;
+}
+@keyframes showhide {
+  0% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0;
+  }
+}
+@keyframes showhidespin {
+  0% {
+    opacity: 0;
+  }
+  74.9999999% {
+    opacity: 0;
+  }
+  75% {
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(180deg);
+  }
+}
+
+.dataTables_wrapper .alert {
+ padding: 0.8em 1em;
+}

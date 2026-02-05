@@ -1,0 +1,176 @@
+/*
+ * $Id: ntg_hlsearch.js 1753 2023-04-26 16:48:47Z hrodrigu $
+ * ntg_hlsearch
+ * written by Hrodrigu
+ * http://www.newtenberg.com
+ * GPL (GPL-LICENSE.txt) licenses.
+ * Built for jQuery library
+ * http://jquery.com
+ */
+(function($){
+	$.fn.ntg_hlsearch = function(options){
+		var params = [];
+		for(var i=1; i<arguments.length;i++){
+			params.push(arguments[i]);
+		}
+		var defaults = {
+			"useBlackList"      : true,
+			"blackList"         : { 
+				"a":true, "abajo":true, "acuerdo":true, "adelante":true, "adems":true, "adrede":true, "ahora":true, 
+				"alrededor":true, "anta":true, "ante":true, "antes":true, "apenas":true, "aproximadamente":true, 
+				"aquel":true, "aquel":true, "aquella":true, "aquella":true, "aquellas":true, "aquellas":true, "aquello":true, 
+				"aquellos":true, "aquellos":true, "arriba":true, "aunque":true, "bajo":true, "bastante":true, "breve":true, 
+				"cabe":true, "cerca":true, "claro":true, "con":true, "conmigo":true, "contigo":true, "contra":true, 
+				"cuales":true, "cuando":true, "cuando":true, "cuanta":true, "cuantas":true, "cuanto":true, "cuanto":true, 
+				"cuantos":true, "de":true, "del":true, "debajo":true, "delante":true, "demasiado":true, "dentro":true, 
+				"deprisa":true, "desde":true, "despacio":true, "despues":true, "detras":true, "donde":true, "donde":true, 
+				"durante":true, "el":true, "ellas":true, "ellos":true, "en":true, "encima":true, "enfrente":true, 
+				"enseguida":true, "entre":true, "estado":true, "estados":true, "estan":true, "estar":true, "estas":true, 
+				"estas":true, "estos":true, "estos":true, "excepto":true, "final":true, "fuera":true, "fueron":true, 
+				"general":true, "habia":true, "habla":true, "hablan":true, "hacia":true, "hasta":true, "horas":true, 
+				"incluso":true, "informo":true, "junto":true, "la":true, "las":true, "los":true, "lo":true, "lejos":true, 
+				"luego":true, "mayor":true, "medio":true, "mejor":true, "menos":true, "menudo":true, "mientras":true, 
+				"mismo":true, "mucho":true, "nadie":true, "ninguna":true, "nosotras":true, "nosotros":true, "nuestra":true, 
+				"nuestras":true, "nuestro":true, "nuestros":true, "nueva":true, "nuevo":true, "nunca":true, "o":true, 
+				"otros":true, "para":true, "parte":true, "pasado":true, "por":true, "porque":true, "pronto":true, "proximo":true, 
+				"puede":true, "quien":true, "quien":true, "quienes":true, "quiza":true, "quizas":true, "raras":true, "repente":true, 
+				"salvo":true, "segun":true, "siempre":true, "sin":true, "so":true, "sobre":true, "solamente":true, "soyos":true, 
+				"supuesto":true, "suyas":true, "tambien":true, "tampoco":true, "tarde":true, "temprano":true, "tiene":true, 
+				"todavia":true, "todos":true, "tras":true, "tuyas":true, "tuyos":true, "usted":true, "ustedes":true, "un":true, 
+				"una":true, "unas":true, "unos":true, "veces":true, "vosotras":true, "vosotros":true, "vuestra":true, 
+				"vuestras":true, "vuestro":true, "vuestros":true, "y":true
+			},
+			"wordCookieName"    : 'hl_words',
+			"phraseCookieName"  : 'hl_phrase',
+			"debug"             : true 
+		};
+		if (typeof(options) ==='object' || typeof(options) ==='undefined' ){
+			return this.each(function(){
+				var obj      = {};
+				obj.dom      = this;
+				obj.opts     = $.extend(defaults, options);
+				obj.tr       = {};
+				obj.tr['á']  = 'a';
+				obj.tr['é']  = 'e';
+				obj.tr['í']  = 'i';
+				obj.tr['ó']  = 'o';
+				obj.tr['ú']  = 'u';
+				obj.tr['ñ']  = 'n';
+				obj.init = function(force){
+					if (typeof($(obj.dom).data("ntg_hlsearch_instance")) != "undefined"  && typeof(force) == "undefined"){
+						return;
+					}
+					//init plugin
+					debug("init");
+					obj.wordcookie  = normalizaTexto(getCookie(obj.opts.wordCookieName));
+					obj.frasecookie = normalizaTexto(getCookie(obj.opts.phraseCookieName));
+					obj.hlSearch();
+					//se guarda la instancia el propio nodo DOM
+					$(obj.dom).data("ntg_hlsearch_instance",obj);
+				};
+				function debug(msg){
+					if(obj.opts.debug && window.console){
+						window.console.log(msg);
+					}
+				};
+				function normalizaTexto(t){
+					var map = {
+    					'&': '&amp;',
+    					'<': '&lt;',
+    					'>': '&gt;',
+    					'"': '&quot;',
+    					"'": '&#39;'
+  					};
+					t = String(t);
+  					t = t.replace(/[&<>"']/g, function(m) { return map[m]; });
+					return t.toLowerCase().replace(/[áéíúóñ]/g,function(match){
+						return obj.tr[match];
+					});
+				}
+
+				obj.hlSearch = function(){
+
+					// primero las frases completas
+					if(obj.frasecookie.length > 0){
+						$(obj.dom).each(function(){
+							var cont = $(this).find("*").each(function(){
+								var nodos = $(this).contents().each(function(){
+									if(this.nodeType == 3){
+										var t = $(this).text();
+										var t_normalizado = normalizaTexto(t);
+										if ( t_normalizado.trim().length > 0 ){
+											var ind = t_normalizado.indexOf(obj.frasecookie);
+											if( ind != -1){
+												var parte1 = t_normalizado.substring(0, ind);
+												var parte2 = t_normalizado.substring(ind, ind + obj.frasecookie.length);
+												var parte3 = t_normalizado.substr( ind + obj.frasecookie.length );
+												var nuevot = parte1 + 
+													"<mark class='search_highlight'>"+
+													parte2+
+													"</mark>"+
+													parte3;
+												$(this).replaceWith("<span>"+nuevot+"</span>");
+											}
+										}
+									}
+								});
+							});
+						});
+					}
+					if(obj.wordcookie.length > 0){
+						var c = unescape(obj.wordcookie).split(",");
+						var palabras = [];
+						$.each(c, function(i,val){
+							palabras = palabras.concat(val.split(/\s+/));
+						});
+
+						$(obj.dom).each(function(){
+							var cont = $(this).find("*").each(function(){
+								var nodos = $(this).contents().each(function(){
+									if(this.nodeType == 3){
+										var t = $(this).text();
+										var t_normalizado = normalizaTexto(t);
+										if (t_normalizado.trim().length > 0 ){
+											var arreglo = t.split(/\s+/);
+											var salida = [];
+											var cambiada = false;
+											$.each(arreglo, function(j,palabra){
+												var palabra_normalizada = normalizaTexto(palabra);
+												if( (! obj.opts.useBlackList || ! obj.opts.blackList.hasOwnProperty(palabra_normalizada)) &&  
+													$.inArray(palabra_normalizada.replace(/[^a-z]/,""),palabras) != -1){
+													salida.push("<mark class='search_highlight'>"+palabra+"</mark>");
+													cambiada = true;
+												}else{
+													salida.push(palabra);
+												}
+											});
+											if(cambiada){
+												debug(salida.join(" "));
+												$(this).replaceWith("<span>"+salida.join(" ")+"</span>");
+											}
+										}
+									}
+								});
+							});
+						});
+					}
+
+				}
+
+				obj.init();
+			});
+		} else if(typeof(options)==='string'){
+			ret = this;
+			this.each(function(){
+				var instancia = $(this).data("ntg_hlsearch_instance");
+				if('undefined' != typeof(instancia) && 'function' === typeof(instancia[options])){
+					ret = instancia[options].apply(instancia,params);
+					return false;
+				}
+			});
+			return ret;
+		} else {
+			return this;
+		}
+	};
+})(jQuery);

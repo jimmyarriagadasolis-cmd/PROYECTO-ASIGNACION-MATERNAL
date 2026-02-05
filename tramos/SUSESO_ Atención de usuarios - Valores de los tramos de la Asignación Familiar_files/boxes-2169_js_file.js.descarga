@@ -1,0 +1,100 @@
+$(function(){
+	$("#btnRechazoInjustificado").click(function(event){
+		ga('send', 'event', {
+			"eventCategory" : 'Accesos PAE',
+			"eventAction"   : 'Reclame ante Suseso',
+			"eventLabel"    : 'Reclamo por reposo injustificado'
+		});
+		//GA4
+		gtag('event', 'Reclame ante Suseso',{
+			'event_category': 'Accesos PAE',
+			'event_label': 'Reclamo por reposo injustificado'
+		});
+	});
+	$("#btnAccesoPae").click(function(event){
+		ga('send', 'event', {
+			"eventCategory" : 'Accesos PAE',
+			"eventAction"   : 'Reclame ante Suseso',
+			"eventLabel"    : 'Reclamo por otras causales'
+		});
+		//GA4
+		gtag('event', 'Reclame ante Suseso',{
+			'event_category': 'Accesos PAE',
+			'event_label': 'Reclamo por otras causales'
+		});
+	});
+
+	$("#ar_bannerSUSESOContigo").click(function(event){
+		ga('send', 'event', {
+			"eventCategory" : 'Accesos Banner',
+			"eventAction"   : 'Reclame ante Suseso',
+			"eventLabel"    : 'Banner SUSESO contigo'
+		});
+		//GA4
+		gtag('event', 'Reclame ante Suseso',{
+			'event_category': 'Accesos Banner',
+			'event_label': 'Banner SUSESO contigo'
+		});
+	});
+	$("#acceso_SUSESO_contigo").click(function(event){
+		ga('send', 'event', {
+			"eventCategory" : 'Atención de usuarios',
+			"eventAction"   : 'Accesos Atención de usuarios',
+			"eventLabel"    : 'Botón SUSESO contigo'
+		});
+		//GA4
+		gtag('event', 'Accesos Atención de usuarios',{
+			'event_category': 'Atención de usuarios',
+			'event_label': 'Botón SUSESO contigo'
+		});
+	});
+
+	$("#ssArCuerpo a.btn-primary").click(function(event){
+		var tr         = $(this).parents("tr");
+		var id_tramite = $("td",tr).first().text();
+		ga('send', 'event', {
+			"eventCategory" : 'Accesos PAE',
+			"eventAction"   : 'Registro Nacional de Trámites',
+			"eventLabel"    : 'Trámite - ' + id_tramite
+		});
+		//GA4
+		gtag('event', 'Registro Nacional de Trámites',{
+			'event_category': 'Accesos PAE',
+			'event_label': 'Trámite - ' + id_tramite
+		});
+	});
+	$("#registro_tramites table a.btn-primary").click(function(event){
+
+		var tr         = $(this).parents("tr");
+		var id_tramite = $("td",tr).first().find("a").text();
+		var categoria  = $("h1.page-header").text();
+		var url        = $(this).attr("href");
+
+		if( url.match(/pae.suseso.cl/) != null){
+			console.log("Accesos PAE "+id_tramite);
+			ga('send', 'event', {
+				"eventCategory" : 'Accesos PAE',
+				"eventAction"   : categoria,
+				"eventLabel"    : id_tramite
+			});
+			//GA4
+			gtag('event', categoria,{
+				'event_category': 'Accesos PAE',
+				'event_label': id_tramite
+			});
+		}else{
+			console.log("Accesos Trámites "+id_tramite);
+			ga('send', 'event', {
+				"eventCategory" : 'Accesos Trámite',
+				"eventAction"   : categoria,
+				"eventLabel"    : id_tramite
+			});
+			//GA4
+			gtag('event', categoria,{
+				'event_category': 'Accesos Trámite',
+				'event_label': id_tramite
+			});
+		}
+	});
+});
+

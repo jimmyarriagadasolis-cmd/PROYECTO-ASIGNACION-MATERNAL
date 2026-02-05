@@ -1,0 +1,37 @@
+$(document).ready(function (){
+	$(".galeria-recursos .figure").each(function(i,e){ 
+		var cl = $(this).attr("class");
+		var aid  = (cl.search(/aid-(\d*)/) != -1 ? cl.match(/aid-(\d*)/)[1]  : undefined);
+		var titulo = $(".aid-"+aid+".titulo").text();
+		var t="";
+		$(".invisible",this).each(function(){
+			t += $(this).text()+ "<br/>";
+		});
+		$("a",this).attr("title",(typeof(t) !='undefined'?t:''));
+		$("a",this).attr("data-title",(typeof(titulo) !='undefined'?titulo:''));
+		$("a",this).attr("data-footer",(typeof(t) !='undefined'?t:''));
+		$("a",this).attr("data-width",500);
+	});
+	$('.galeria-recursos .figure > a')
+	.attr('data-lightbox','imagendibam')
+	.attr('data-gallery','imagendibam')
+	.attr('data-toggle','lightbox');  
+});
+$(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
+	event.preventDefault();
+	var img_ratio =  $("img",this).width() /  $("img",this).height();
+	$(this).ekkoLightbox({
+		loadingMessage:"<span class='fa fa-spinner fa-spin fa-3x fa-fw'></span>",
+		gallery_parent_selector: ".galeria-recursos",
+		onContentLoaded: function(){       
+			var real_ratio = this.modal_content.width() / this.modal_content.height();
+			this.resize(0.9*real_ratio * (
+						$("body,html").height() 
+					- $(".modal-footer").outerHeight(false) 
+					- $(".modal-header").outerHeight(false)
+					- ($(".modal-dialog").outerHeight(true) - $(".modal-dialog").innerHeight()))
+			);
+		}
+	});
+}); 
+

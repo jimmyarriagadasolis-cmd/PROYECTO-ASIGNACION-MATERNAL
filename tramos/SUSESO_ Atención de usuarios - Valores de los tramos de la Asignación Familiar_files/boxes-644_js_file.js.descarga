@@ -1,0 +1,1082 @@
+/* --------------------------- */
+/* V: 2.0.8 | 2025-05-28 hrodrigu
+/* --------------------------- */
+/* Modificado por CJ - 17-06-2025 */
+
+function ntg_bootstrap_engine(context){
+	if("undefined" == typeof(context)) {
+		context = document;
+	}
+
+	// addClass generales
+	$( ".current" , context).addClass( "active" );
+	$( ".vermas a" , context).addClass( "btn btn-link" );
+	$( "span.counting" , context).addClass( "badge" );
+	$( "div.lista-menu > ul" , context).addClass( "list-group" );
+	$( "div.lista-menu > ul > li" , context).addClass( "list-group-item" );
+	$( "div.recuadros > h2" , context).addClass( "titulo-caja" );
+	$( "div.titulo-pagina > .titulo" , context).addClass( "page-header" );
+	$( "div.presentacion > .titulo" , context).addClass( "page-header" );
+	$( "div.articulo > .titulo" , context).addClass( "page-header" ); 
+	$( ".articulo table" , context).addClass( "table table-bordered" );
+	$( ".tabular" , context).addClass( "table" );
+	$( ".formulario div.form_text input" , context).addClass( "form-control" );
+	$( ".formulario div.form_number input" , context).addClass( "form-control" );
+	$( ".formulario div select" , context).addClass( "form-control" );
+	$( ".formulario div textarea" , context).addClass( "form-control" );
+	$( ".formulario div.form_select input [type='checkbox']" , context).addClass( "checkbox" );
+	$( ".formulario div.form_select input [type='radio']" , context).addClass( "radio" );
+	$( ".formulario div.form_button input" , context).addClass( "btn btn-primary boton margen-arriba-sm" );
+
+	//Para agregar un contenedor extra a los Banner HTML
+	$( ".banner-html .recuadro a" , context).wrapInner( "<span></span>" );
+
+	// solo suseso
+	$( "div.lista > h2" , context).addClass( "titulo-caja" );
+	$( "div.lista-menu > h2" , context).addClass( "titulo-caja" );
+	$( "div.banner-html > h2" , context).addClass( "titulo-caja" );
+	$( "div.banner > h2" , context).addClass( "titulo-caja" );
+	$( ".recuadros > div.recuadro" , context).addClass( "media" );
+	$( ".recuadros > div.recuadro > .titulo" , context).addClass( "media-heading" );
+	// imagenes decorativas
+	$('.ntg-bs.role_presentation, ntgBootstrap.role_presentation', context).each(function(i, cont){
+		$("img", cont).addClass('ntg-bs role_presentation');
+		$(cont).removeClass("role_presentation");
+	});
+
+	// ------------------
+	// wrap all recuadros
+	// ------------------
+
+	var recuadros = $(".recuadros", context);
+
+	// Agrupa dentro de un div.informacion los elementos de recuadro que son titulares,
+	// parrafos o spans
+	recuadros
+		.children(".recuadro")
+		.each(function(){
+			$(this)
+				.children('h1,h2,h3,h4,h5,h6,ul,p,span')
+				.not('.figure')
+				.wrapAll("<div class='informacion'>");
+			$(this)
+				.children('img')
+				.wrapAll('<div class="figure">');
+			$(this)
+				.children('div,h1,h2,h3,h4,h5,h6,ul,p,span')
+				.not('.informacion')
+				.addClass(function(){
+					return $(this).find('img').length ? 'figure' : null;
+				});
+		});
+
+
+	// CSS: .recuadros-recursos[ -left | -right ]
+	// ------------------------------------------
+	// Agrega la clase css 'media' para los recuadros, y 'media-body' y 'media-left'
+	// o 'media-right' para los elementos en el, dependiendo de la clase css
+	// asignada a recuadros: 'recuadros-recursos-left' o 'recuadros-recursos-right'.
+	// Si solo se especifica 'recuadros-recursos' se asignara 'media-left' como clase
+	// por defecto.
+
+	recuadros
+		.filter('[class*="recuadros-recursos"]')
+		.each(function(){
+			var side = $(this)
+				.attr('class')
+				.match(/recuadros-recursos([-\w]*)/)[1];
+
+			side = side || '-left';
+			$(".recuadro",this).each(function(){
+				$(this).addClass("media");
+				$(".informacion", this).addClass("media-body");
+				$(">.figure,>a,>img",this).addClass("media"+side);
+				if(side == '-right'){
+					$(".media"+side,this).appendTo(this);
+				}
+			});
+		});
+
+	// CSS: .recuadros-cerrados | .recuadros-envueltos
+	// -----------------------------------------------
+	// Agrupa los elementos de 'recuadros-cerrados' o 'recuadros-envueltos'
+	// en 'div.thumbnail'.
+
+	recuadros
+		.filter(".recuadros-cerrados, .recuadros-envueltos")
+		.children(".recuadro")
+		.each(function(){
+			$(this)
+				.children()
+				.wrapAll("<div class='thumbnail'></div>");
+		});
+
+	// Este fragmento agrega atributos que necesita bootstrap para operar, la forma de ocuparlo es para el
+	// tag que requiere atributos, definir primero un class ntgBootstrap, seguido de uno o varios classnames
+	// de la forma <nombre del atributo>_<valor del atributo>  ( sin los < > ni espacios en blanco
+	// asi por ejemplo:
+	//  class="ntgBootstrap data-toggle_collapse"  
+	//  se convierte en:
+	//  data-toggle="collapse" class=""
+	//  Ejemplo para data target: data-target_\#menuEjemplo
+	$(".ntgBootstrap, .ntg-bs", context).each(function(){
+		var myself = $(this);
+		$.map(
+			$.grep(myself.attr("class").split(/\s+/),
+				function(e,i){ 
+					return(e.indexOf("data-") != -1 || e.indexOf("role_") != -1 || e.indexOf("aria-") != -1);
+				}) ,
+			function(classname,index){
+				var cl = classname.replace("\\","").match(/([^_]+)_(.*)/);
+				if(cl != null){
+					myself.attr( cl[1], cl[2]);
+					myself.removeClass("ntgBootstrap ntg-bs");
+					myself.removeClass(classname);
+				}
+			}
+		);
+	});
+
+	// 
+	// Para recuadros en columnas
+	// Se buscan recuadros-2-columnas
+	//           recuadros-3-columnas
+	//           recuadros-4-columnas
+	// se agrupan los .recuadro en n y se envuelven en un <div class="row"></div>
+	//
+
+	$([2,3,4,6]).each(function(index,i){
+		$(".recuadros-"+i+"-columnas", context).each(function(){
+			var contenedores =$(this).children(".recuadro").parent();
+			$(contenedores).each(function(){
+				var contenedorRecuadros = this;
+				var d = $("<div class ='row'></div>");
+				$(".recuadro", this)
+					.addClass("col-sm-"+(12/i))
+					.each(function(n){
+						if( n %  i ==  0 && n > 0 ){
+							$(d).appendTo(contenedorRecuadros);
+							d = $("<div class ='row'></div>");
+						}
+						$(this).detach().appendTo(d);
+					});
+				$(d).appendTo(contenedorRecuadros);
+			});
+		});
+		$(".fila-flexible.recuadros-"+i+"-columnas .row ", context).each(function(){
+			if($(".col-sm-"+(12/i),this).length == i){
+				$(this).addClass( "row-flex row-flex-wrap" ); 
+			}
+		});
+	});
+
+	// CSS: .recuadros-col-[ xs | sm | md | lg ]-[ n ]
+	// -----------------------------------------------  
+	// Variante para distribuir como columnas los recuadros
+	// Asigna directamente la clase css descrita en BootStrap
+	// para definir las columnas.
+	// Los numeros que exceden la division de 12 columnas
+	// quedan truncados.
+
+	recuadros
+		.filter('[class*="recuadros-col"]')
+		.each(function(){
+			var that = $(this);
+			var row = null;
+			var col = that.attr('class')
+				.match(/recuadros-col-(\w*)-(\d*)/)
+				.slice(1);
+
+			that
+				.children('.recuadro')
+				.addClass('col-'+col[0]+'-'+col[1])
+				.each(function(i){
+					if(!Math.floor(12/col[1])%(i+1)){
+						row = $('<div class="row">');
+						that.append(row);
+					}
+					if(row) row.append(this);
+				})
+		});
+
+	// CSS: .fecha-destacada[ -completa ][ -left | -right ]  DEPRECATED
+	// ----------------------------------------------------
+	// Separa el elemento '.fecha' del resto del contenido.
+	// El formato de la fecha resultante es: p.dia + p.mes abreviado.
+	// Para el sufijo '-completa' p.mes es desabreviado y agrega p.anno.
+
+	var meses = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+	var meses_full = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+	recuadros
+		.filter('[class*="fecha-destacada"]')
+		.children('.recuadro')
+		.each(function(){
+			var is_full = $(this).hasClass('fecha-destacada-completa');
+			var side = $(this).hasClass('fecha-destacada-completa-right') ||
+				$(this).hasClass('fecha-destacada-right') ? 'right' : 'left';
+
+			var that = $(this)
+				.addClass('media-fecha media')
+				.find('.fecha')
+				.addClass('media-' + side)
+				.each(function(){
+					$(this).html(function(){
+						var date_arr = $(this)
+							.attr("class")
+							.match(/iso8601-(\d\d\d\d)(\d\d)(\d\d)/)
+							.slice(1);
+
+						if(is_full) return (
+							'<span class="dia">'+date_arr[2]+'</span>'+
+							'<span class="mes">'+meses_full[date_arr[1]-1]+'</span>'+
+							'<span class="anno">'+date_arr[0]+'</span>'
+						);
+						return (
+							'<span class="dia">'+date_arr[2]+'</span>'+
+							'<span class="mes">'+meses[date_arr[1]-1]+'</span>'
+						);
+					})
+						.siblings()
+						.wrapAll('<div class="media-body">');
+
+					if(side == 'right') $(this).appendTo(that);
+				});
+		});
+	$(".fecha-dia-mes",recuadros).each(function(){
+		var cl = $(this).attr("class");
+		var fecha= cl.match(/iso8601-(\d\d\d\d)(\d\d)(\d\d)/);
+		if(fecha != null){
+			$(this).text('');
+			$(this).append('<'+'span class="dia">'
+				+ fecha[3]+'<'+'/span><'+'span class="mes">'
+				+ meses[parseInt(fecha[2])-1]+'<'+'/span>');
+		}		
+	});
+	$(".fecha-dia-mes-anio",recuadros).each(function(){
+		var cl = $(this).attr("class");
+		var fecha= cl.match(/iso8601-(\d\d\d\d)(\d\d)(\d\d)/);
+		if(fecha != null){
+			$(this).text('');
+			$(this).append('<'+'span class="dia">'+ fecha[3]+'<'+'/span>'+
+				'<'+'span class="mes">'+ meses[parseInt(fecha[2])-1]+'<'+'/span>'+
+				'<'+'span class="anio">'+ fecha[1]+'<'+'/span>');
+		}		
+	});
+
+	// lista colapsable doble con boton
+	$("div.lista-colapsable", context).each(function(j){
+		var root = this;
+		var root_id = $(root).attr("id");
+		if(typeof(root_id) =="undefined"){
+			root_id = $(this).parents("div[id]").attr("id");
+		}
+		$("li",this).each(function(i){
+			$(this).addClass("list-group-item")
+				.addClass("item-"+($(this).index()+1))
+				.parent()
+				.addClass("nivel-"+($(this).parent().parentsUntil(root).filter("ul").length + 1))
+				.addClass("list-group");
+			if($(this).children("ul").length > 0) {
+				var a = $(">a",this).filter(":first");
+				var ul = $(">ul",this);
+				var id_ul = (typeof($(ul).attr("id")) != "undefined" ? $(ul).attr("id") : root_id) + "_" + i; 
+				var current = ($(this).attr("class").indexOf("current") != -1);
+				var button = $('<button type="button"></button>')
+					.addClass("pull-right btn btn-link " + (current ? '':' collapsed') )
+					.attr("data-toggle","collapse")
+					.attr("data-target","#"+id_ul)
+					.attr("aria-controls", id_ul)
+					.insertBefore(a)
+					.append('<span class="fa fa-minus-circle" aria-hidden="true"></span>')
+					.append('<span class="fa fa-plus-circle" aria-hidden="true"></span>');
+				$(ul).attr("id",id_ul)
+					.addClass('collapse');
+				if(current) {
+					$(ul).addClass("in");
+					$(button).attr("aria-expanded", "true");
+				} else {
+					$(ul).addClass("collapsed");
+					$(button).addClass("collapsed");
+					$(button).attr("aria-expanded", "false");
+				}
+			}
+		});
+	});
+
+
+
+	// lista colapsable simple con anchor
+	$("div.lista-colapsable-simple", context).each(function(j){
+		var root = this;
+		var root_id = $(root).attr("id");
+		if(typeof(root_id) =="undefined"){
+			root_id = $(this).parents("div[id]").attr("id");
+		}
+		$( "li",this).each(function(i){
+			$(this).addClass("list-group-item")
+				.addClass("item-"+($(this).index()+1))
+				.parent()
+				.addClass("nivel-"+($(this).parent().parentsUntil(root).filter("ul").length + 1))
+				.addClass("list-group");
+			if($(this).children("ul").length > 0) {
+				var a = $(">a",this).filter(":first");
+				var ul = $(">ul",this);
+				var id_ul = (typeof($(ul).attr("id")) != "undefined" ? $(ul).attr("id") : root_id) + "_" + i; 
+				var current = ($(this).attr("class").indexOf("current") != -1);
+				$(a)
+					.addClass("btn btn-link " + (current ? '':' collapsed') )
+					.attr("aria-expanded",  (current ? "true": "false"))
+					.attr("href","#"+id_ul)
+					.attr("data-toggle","collapse")
+					.attr("aria-controls", id_ul)
+					.prepend('<span class="fa fa-plus-circle" aria-hidden="true"></span>')
+					.prepend('<span class="fa fa-minus-circle" aria-hidden="true"></span>');
+				$(ul).attr("id",id_ul)
+					.addClass('collapse');
+				if(current) {
+					$(ul).addClass("in");
+				} else {
+					$(ul).addClass("collapsed");
+				}
+			}
+		});
+	});
+	//PARA EL BTN QUE REEMPLAZA PRESENTACIÓN
+	//
+	$(document).ntg_responsive({"callbacks":[
+		{
+			limite: 993,
+			change: function (){
+				$('#presentacion_pagina.articulo.collapse').addClass('in');
+				$("#btn_vermas_fiscalizacion").show();
+				$("#presentacion_cuerpo").collapse('hide');
+			}
+		},
+		{
+			limite: 0,
+			change: function (){
+				$('#presentacion_pagina.articulo.collapse').removeClass('in');
+				$("#btn_vermas_fiscalizacion").hide();
+				$("#presentacion_cuerpo").collapse('hide');
+				if( "undefined" == typeof($("#btn_presentacion").data("NTG_MORE_PRESENTATION"))){
+					$("#btn_presentacion").click(function(){
+						if($("#btn_presentacion").hasClass("collapsed")){
+							$("#btn_vermas_fiscalizacion").show();
+						} else {
+							$("#btn_vermas_fiscalizacion").hide();
+						}
+						$("#presentacion_cuerpo").collapse('hide');
+					});
+					$("#btn_presentacion").data("NTG_MORE_PRESENTATION", true);
+				}
+			}
+		}
+	]});
+	// para agregar icono al titulo reclame
+	$( ".destacado-reclamos .page-header > a" , context).prepend( "<span class='icono-titulo'></span>" );
+
+	// aplica sobre todas las cajas con classes 'panel-group' y 'acordeon-recuadros'
+	$( "div.panel-group.acordeon-recuadros" , context).each(function(){
+		$( "> div.recuadro" , this)
+			.addClass("panel-body")
+			.each(function(idx){
+				// id del contenedor de recuadros
+				var pid= $(this).parent().attr("id");
+				// con anchor preexistente
+				$(this)
+					.children()
+					.first()
+					.children("a")
+					.attr("data-parent","#"+pid)
+					.attr("href","#"+$(this)
+						.parent()
+						.attr("id")+"_"+idx)
+					.attr("data-toggle","collapse")
+					.addClass("accordion-toggle collapsed");
+				// agregando anchor
+				// $('> :first-child',$(this)).children().wrap('<a href="#'+pid+'_'+idx+'" data-toggle="collapse" class="accordion-toggle collapsed"></a>');
+				// envoltorio para el titulo
+				$(this)
+					.children()
+					.first()
+					.addClass('panel-title')
+					.wrap("<div class='panel-heading' role='tab'></div>");
+				var t = $(this).children().first().detach();
+				// envoltorio para todo el recuadro
+				$(this).wrap("<div class='panel panel-default'></div>");
+				// deja titulo antes del recuadro
+				$(this).before(t);
+				// envoltorio para el cuerpo del recuadro
+				$(this).wrap("<div class='panel-collapse collapse' role='tabpanel' id='"+pid+'_'+idx+"'></div>");
+			});
+	});
+
+	// ACORDEON RECUADROS AGRUPADOS
+
+	$('div.panel-group.acordeon-recuadros-agrupados',context).not('.recuadro').not('.grupo').each(function(idx_b){
+		$('> ul.indice', $(this)).addClass('sr-only');
+		$('> h3.grupo > a', $(this)).attr('data-parent','#'+$(this).attr('id'));
+		$('> h3.grupo', $(this)).addClass('panel-title');
+		$('> div.grupo', $(this)).addClass('panel-body').each(function(idx){
+			var pid= $(this).parent().attr('id');
+			$(this).prev('h3').children('a').attr('href','#'+$(this).parent().attr('id')+'_'+idx).attr('data-toggle','collapse').addClass('accordion-toggle collapsed');
+			var t = $(this).prev('h3').detach();
+			$(this).wrap("<div class='panel panel-default'></div>");
+			$(this).before(t);
+			$(this).prev('h3').wrap("<div class='panel-heading' role='tab'></div>");
+			$(this).wrap("<div class='panel-collapse collapse' role='tabpanel' id='"+pid+'_'+idx+"'></div>");
+		});
+	});
+
+	// aplica sobre todas las cajas con clases 'panel-group' y 'acordeon-seccion'
+	$('div.panel-group.acordeon-seccion > div:visible, .panel-group.acordeon-seccion-inv > div', context)
+		.addClass('panel-body')
+		.each(function(idx, cont){
+			var pid= $(cont)
+				.parent()
+				.attr("role","tablist")
+				.attr('id');
+			// agrega anchor
+			var t = $(cont).prev('h2') ;
+			if($(t).length > 0){
+				$(t).addClass('panel-title');
+				$(t).contents().wrap('<a href="#'+pid+'_'+idx+'" data-parent="#'+pid+'" data-toggle="collapse" class="accordion-toggle collapsed"></a>');
+				$(t).detach();
+				$(cont).wrap("<div class='panel panel-default'></div>");
+				$(cont).before(t);
+				$(cont).prev('h2').wrap("<div class='panel-heading' role='tab'></div>");
+				$(cont).wrap("<div class='panel-collapse collapse' role='tabpanel' id='"+pid+'_'+idx+"'></div>");
+			}
+		});
+
+	// Para convertir recuadros agrupados en tabs
+	$('div.tabs-recuadros-agrupados, .tabs-recuadros-agrupados-pills', context).not('.recuadro').not('.grupo').each(function(idx_b){
+		var ul = $('> ul',this).addClass("nav");
+		$(ul).attr('role','tablist');
+		if($(this).hasClass("tabs-recuadros-agrupados-pills")){
+			$(ul).addClass("nav-pills");
+		}else{
+			if(!$(ul).hasClass("nav-pills") && !$(ul).hasClass("nav-tabs")){
+				$(ul).addClass("nav-tabs");
+			}
+		}
+		$('> ul > li',this).attr('role','presentation');
+		$('> ul > li > a',this).each(function(ida){
+			$(this).attr('aria-controls',$(this).attr('href').substr(1,$(this).attr('href').length)).attr('role','tab').attr('data-toggle','tab');
+		});
+		$('> h3.grupo',this).addClass('sr-only');
+		$('> div.grupo',this).attr('role','tabpanel').addClass('tab-pane').wrapAll('<div class="tab-content"></div>');
+		// activar
+		$('> ul > li',this).first().addClass('active');
+		$('> div.tab-content > div.tab-pane',this).first().addClass('active');
+	});
+
+	//Para transformar secciones de un eidox en tabs Bootstrap
+	$('div.tabs-seccion-eidox',context).each(function(){
+		// inside box
+		$('> div.tab-content > div',this)
+			.filter(":visible")
+			.addClass('tab-pane fade')
+			.first()
+			.addClass("in active");
+		$('> div.tab-content > div.tab-pane > h2',this) .addClass ("sr-only");
+		$('> ul.indice',this).each(function(){
+			// inside section index
+			$(this).addClass("nav");
+			$("li",this).each(function(i) {
+				// inside index item
+				$(this).attr("role", "presentation");
+				$("a", this).each(function() {
+					// inside anchor
+					$(this)
+						.attr('aria-controls', $(this).attr('href').substr(1))
+						.attr('role', 'tab')
+						.attr('data-toggle', 'tab');
+				});
+			})
+				.first().addClass("active");
+			if(!$(this).hasClass("nav-pills") && !$(this).hasClass("nav-tabs")){
+				$(this).addClass("nav-pills");
+			}
+		});
+	});
+
+	// para transformar cajas de articulo tabular agrupado en tabs
+	$('.tabs-tabular',context).each(function(i,cont){
+		var content = $("<div class='tab-content'></div>");
+		var indice;
+		if($(">ul.indice",cont).length == 0){
+			indice = $("<ul class='nav nav-tabs'></ul>");
+		}else{
+			$(">ul.indice",cont).each(function(){
+				$("> li",this).each(function(){
+					var a = $("a",this)
+						.attr("role","tab")
+						.attr("data-toggle","tab");
+					$(a).attr("aria-controls", $(a).attr("href").substr(1));
+					$(this).attr("role","presentation") ;
+				})
+					.first().addClass("active");
+			}) .addClass("nav nav-tabs")
+				.attr("role","tablist");
+		}
+		$(">table",this).each(function(){
+			var id = $(this).attr("id");
+			var groupTitle = $("caption",this).detach().text();
+			$(this)
+				.attr("role","tabpanel")
+				.addClass("tab-pane fade")
+				.appendTo(content);
+			if("undefined" == typeof(indice)){
+				$("<li role='presentation'><a href='#" + id +
+					"' aria-controls='" + id  + 
+					"' role='tab' data-toggle='tab'>" + groupTitle + "</a></li>")
+					.appendTo(indice);
+			}
+		});
+		if("undefined" == typeof(indice)){
+			$("li",indice).first().addClass("active");
+			$(indice).appendTo(this);
+		}
+		$("table",content).first().addClass("active in");
+		$(content).appendTo(this);
+	});
+
+	// Borra filtros sin contenido
+	$("#btn-filtros-cont, #filtros-cont,.ntg-filtros").parent().each(function(){
+		if($(this).children().not("#btn-filtros-cont, #filtros-cont, .ntg-filtros",this).length == 0){
+			$("#btn-filtros-cont, #filtros-cont, .ntg-filtros", this).remove();  
+		}
+	});
+	// se hace un chequeo antes y despues del borrar tabs vacios 
+	$(".ntg-check-empty", context).each(function() {
+		var h2 = $("h2.ntg-titulo-caja", this)
+			.add(".ntg-ignore-empty", this);
+		var textos = $(this)
+			.find("*")
+			.filter(
+				function() {
+					return ("undefined" == typeof($(this).attr("style")) ||
+						$(this).attr("style").search(/display\s*:\s*none/) == -1) &&
+						$(this).prop("tagName") != "IFRAME" &&
+						this.nodeType != 8 &&
+						!$(this).hasClass("ntg-ignore-empty") &&
+						!$(this).hasClass("ntg-titulo-caja");
+				}
+			)
+			.contents()
+			.filter(function() {
+				return this.nodeType == "3";
+			}).text().trim().replace(/\n/g, "");
+		if (textos.length == 0 && $("img", this).length == 0) {
+			$(h2).remove();
+			if ($(this).hasClass("ntg-full-empty")) {
+				$(this).remove();
+			}
+		}
+	});
+	// Borrar tabs acordeones vacios
+	$(".tab-content, .panel-group", context)
+		.not(".ntg-no-check-empty")
+		.each(function(){
+			var ul;
+			$(".tab-pane, .panel-collapse.collapse",this).each(function(){
+				var cont = $(this).find("*").filter(function(){
+					return ("undefined" == typeof($(this).attr("style")) || $(this).attr("style").search(/display\s*:\s*none/) == -1 )
+						&& $(this).prop("tagName") != "IFRAME" 
+						&& this.nodeType != 8
+						&& !$(this).hasClass("ntg-filtros");
+				}).contents();
+				var text = ""+$(cont).filter(function(){ 
+					return this.nodeType == "3";
+				})
+					.text()
+					.trim().replace(/\n/g,"");
+				var imgs = $(cont).find("img");
+				//tabs
+				if(text.length == 0  && imgs.length == 0 && $(this).hasClass("tab-pane")){
+					var id= $(this).attr("id");
+					var tab =$(".nav a[data-toggle='tab'][href='#"+id+"']",context).parent();
+					ul = $(tab).parent();
+					$(tab).remove();
+					$(this).remove();
+				}
+				// acordeon
+				if(text.length == 0  && imgs.length == 0 && $(this).hasClass("panel-collapse")){
+					$(this).parents(".panel").first().remove();
+				}
+			});
+			if($(".tab-pane.active",this).length == 0){
+				$(ul).find("li").not(".tabdrop").first().addClass("active");
+				$(".tab-pane",this).first().addClass("active");
+				if($(".tab-pane",this).first().hasClass("fade")){
+					$(".tab-pane",this).first().addClass("in");
+				}
+			}
+
+		});
+	// segundo chequeo por si el primero deja vacio completo los tabs
+	$(".ntg-check-empty", context).each(function() {
+		var h2 = $("h2.ntg-titulo-caja", this)
+			.add(".ntg-ignore-empty", this);
+		var textos = $(this)
+			.find("*")
+			.filter(
+				function() {
+					return ("undefined" == typeof($(this).attr("style")) ||
+						$(this).attr("style").search(/display\s*:\s*none/) == -1) &&
+						$(this).prop("tagName") != "IFRAME" &&
+						this.nodeType != 8 &&
+						!$(this).hasClass("ntg-ignore-empty") &&
+						!$(this).hasClass("ntg-titulo-caja");
+				}
+			)
+			.contents()
+			.filter(function() {
+				return this.nodeType == "3";
+			}).text().trim().replace(/\n/g, "");
+		if (textos.length == 0 && $("img", this).length == 0) {
+			$(h2).remove();
+			if ($(this).hasClass("ntg-full-empty")) {
+				$(this).remove();
+			}
+		}
+	});
+
+	$.each([1,2,3,4,5,6,7,8,9,-1], function(i, iesimo){
+		$(".ntg-acordeon-open-"+iesimo,context).each(function(){
+			var titulo = $(".panel-heading a[data-toggle='collapse']:eq("+(iesimo > 0 ? (iesimo -1):iesimo)+")",this).removeClass("collapsed");
+			var panel = $(".panel-collapse[role='tabpanel'][id='"+$(titulo).attr("href").substr(1)+"']").addClass("in");	
+		});
+	});
+	$(".preguntas-orientador .recuadro", context).each(function(i,recuadro){
+		var estilo = $(".media-heading", recuadro).attr("class");
+		if("undefined" != typeof(estilo)){
+			var pvid = (estilo.search(/pvid-(\d*)/)!= -1 ? estilo.match(/pvid-(\d*)/)[1] : undefined);
+			var caption = $(".caption",this);
+			var img = $(".figure.media-right img",this)
+				.wrapAll('<button type="button" data-toggle="modal" data-target="#ayuda_pvid_'+pvid+'" class="btn-ayuda btn btn-link"></button>');
+			$(caption).replaceWith(
+				'<div id="ayuda_pvid_'+pvid+'" class="modal fade" tabindex="-1" role="dialog">'+
+				'	<div class="modal-dialog" role="document">'+
+				'		<div class="modal-content">'+
+				'			<div class="modal-header">'+
+				'				<button type="button" class="close" data-dismiss="modal" aria-label="Close">'+
+				'					<span aria-hidden="true">&times;</span>'+
+				'				</button>'+
+				'				<h4 class="modal-title">Ayuda</h4>'+
+				'			</div>'+
+				'			<div class="modal-body">'+$(caption).html()+'</div>'+
+				'		 </div>'+
+				'	</div>'+
+				'</div>');
+		}
+	});
+
+	// Animacion de acordeones
+	// Al mostrar
+	$(".panel-group.acordeon, .panel-group.acordeon-portal ", context).on("shown.bs.collapse", function (ev) {
+		var id= $(ev.target).attr("id");
+		//  Se guarda en el hash el id de ultimo acordeon desplegado
+		if(history.replaceState) {
+			// Navegadores modernos que soportan la nueva API de history
+			history.replaceState(null, null, '#'+id);
+		}
+		else {
+			// Navegadores viejos
+			location.replace(location.href.split("#").shift() + "#"+id);
+		}
+		$("html,body")
+			.animate(
+				{ scrollTop: 
+					$("#"+id).offset().top 
+					- ($(".nav.navbar-nav", context).css("position") == "fixed"? $(".nav.navbar-nav.navbar-fixed-top", context).height() : 0) 
+					- $("#"+id).prev().height()
+				},
+				500);
+	});
+	// al esconder
+	$(".panel-group.acordeon, .panel-group.acordeon-portal", context).on("hide.bs.collapse", function (ev) {
+		if( $(".panel-collapse.in",this).attr("id") == $(ev.target).attr("id")) {
+			$("html,body")
+				.animate(
+					{
+						scrollTop: 
+						$(this).offset().top 
+						- ($(".nav.navbar-nav", context).css("position") == "fixed"? $(".nav.navbar-nav.navbar-fixed-top", context).height() : 0) 
+					},
+					500);
+			//  Se guarda en el hash el id de ultimo acordeon desplegado
+			if(history.replaceState) {
+				// Navegadores modernos que soportan la nueva API de history
+				history.replaceState(null, null, "#");
+			}
+			else {
+				// Navegadores viejos
+				location.replace(location.href.split("#").shift() + "#");
+			}
+		}
+	});
+
+
+	// se verifica si hay un id en el hash de la pagina y se muestra el acordeon o el tab solo si se lo encuentra
+	var hash_id;
+	if(getCookie('ntg_redirect_hash').length > 0){
+		hash_id = getCookie('ntg_redirect_hash');
+		deleteCookie('ntg_redirect_hash');
+	}else{
+		hash_id = location.hash.substr(1);
+	}
+	if(hash_id.length > 0 &&  $("#"+hash_id).length > 0 )  {
+		if( $("#" + hash_id).hasClass("tab-pane")){
+			//tab
+			$("a[href='#"+hash_id+"']").tab('show');
+			$("html,body")
+				.animate({
+					scrollTop: 
+					$("a[href='#"+hash_id+"']").offset().top 
+					- ( $("#navbarResponsive .ntg-menu-fixed", context).height() ) 
+				}, 500);
+		}else if( $("#" + hash_id).hasClass("panel-collapse")){
+			//acordeon
+			$("#" + hash_id).collapse("show");
+			// abrir el contenedor tab si existe
+			var padretab = $("#" + hash_id).parents(".tab-pane");
+			var padreid = $(padretab).attr("id");
+			$("a[href='#"+$(padretab).attr("id")+"']").tab('show');
+			if(padreid && $("a[href='#"+padreid+"']").length > 0){
+				$("a[href='#"+hash_id+"']").on('shown.bs.tab', function (e) {
+					$("html,body")
+						.animate({
+							scrollTop: 
+							$("#" + hash_id).offset().top 
+							- ($("#navbarResponsive .ntg-menu-fixed", context).css("position") == "fixed"? $("#navbarResponsive .ntg-menu-fixed", context).height() : 0) 
+						}, 500);
+				});
+			}
+		}
+	}
+	//para cajas contenedora de barra de posicion
+	$("div.breadcrumb > p", context).each(function(){
+		var id= ("undefined" != typeof($(this).attr("id")) ? $(this).attr("id") : "");
+		var style=  ("undefined" != typeof($(this).attr("style")) ? $(this).attr("style") : "");
+		$(this).replaceWith( "<span id='"+id+"' style='"+style+"'>" +$(this).html() + "</span>" );
+	}); 
+
+	// celdas de tabla colapsables
+	$("td.td-colapsable", context).each(function(){
+		var t = $(this).text();
+		if( t === $(this).html() || $(this).children().length == 0) { // solo texto
+			var new_id = "colapsable"+Math.round(Math.random()*1000);
+			var t_arr = t.split(" ");
+			if( t_arr.length > 5) {
+				var t_inicial = t_arr.shift();
+				t_inicial += " " + t_arr.shift();
+				t_inicial += " " + t_arr.shift();
+				$(this).html(t_inicial +"<span id='"+new_id+"' class='collapse'>"+t_arr.join(" ")+"</span>"+
+					"<button data-target='#"+new_id+"' class='btn btn-default btn-leermas collapsed' type='button' data-toggle='collapse'>"+
+					"<span class='mas'>Leer más<span class='fa fa-angle-down fa-lg margen-derecha-xs'></span></span>"+
+					"<span class='menos'>Leer menos<span class='fa fa-angle-up fa-lg margen-derecha-xs'></span><span>"+
+					"</button>" );
+			}
+		} else {
+			$(this).append("<span class='hidden'></span>");
+		}
+	});
+
+	// limpia celdas de tabla con recursos vacios
+	$("table  tr > td span.binary-.format-",context)
+		.filter(function(){ 
+			return $(this).html="&nbsp;";
+		}).remove();
+
+
+	// inicializacion de datatables paginador
+	$("table.datatable-paginador, .datatable-paginador table", context).each(function(){
+		var tabla = this;
+		var opts = {
+			"responsive": {
+				"details": {
+					"display": $.fn.dataTable.Responsive.display.childRowImmediate
+				}
+			},
+			"columnDefs": [ { "responsivePriority": 1, "targets": 0 }, { "responsivePriority": 2, "targets": -1 } ],
+			"dom": 
+			"<'row'<'col-md-12'p>>"+
+			"<'row'<'col-sm-12'tr>>"	,
+			"paging": true,
+			"order": [[ 0, 'desc' ]],
+			"searching": false 
+		} ;
+		if($("tr",this).length < 5){
+			opts.ordering = false;
+		}
+		$("td.fecha", tabla).each(function(){
+			var estilo = $(this).attr("class").split("iso8601-");
+			if( estilo.length > 0){
+				$(this).prepend("<div class='hidden'>"+estilo[1]+"</div>");
+			}
+		});
+		if("undefined" === typeof($(tabla).data("NTG_DATATABLES_INIT"))){
+			var padre_panel = $(this).parents(".tab-pane");
+			if($(padre_panel).length >0 && !$(padre_panel).hasClass("active in")){
+				var padre_tab = $('a[data-toggle="tab"][href="#'+ $(padre_panel).attr("id") +'"');
+				if($(padre_panel).hasClass("in")){
+					$(tabla).DataTable( opts );
+					$(tabla).data("NTG_DATATABLES_INIT", true);
+				}else{
+					$(padre_tab).on('shown.bs.tab', function (e) {
+						var padre_panel = $($(e.target).attr("href"));
+						if("undefined" === typeof($(e.target).data("NTG_DATATABLES_INIT"))){
+							$("table.datatable-paginador, .datatable-paginador table",padre_panel ).each(function(tabla){
+								$(this).DataTable( opts );
+							});
+						}
+						$(e.target).data("NTG_DATATABLES_INIT", true);
+					});
+				}
+			}else{
+				$(tabla).DataTable( opts );
+				$(tabla).data("NTG_DATATABLES_INIT", true);
+			}
+		}
+	});
+	// inicializacion de datatables simple
+	$("table.datatable-simple, .datatable-simple table", context).each(function(){
+		var tabla = this;
+		var opts = {
+			"responsive": {
+				"details": {
+					"display": $.fn.dataTable.Responsive.display.childRowImmediate
+				}
+			},
+			"columnDefs": [ 
+				{ "responsivePriority": 1, "targets": 0 }, 
+				{ "responsivePriority": 2, "targets": -1 } 
+			],
+			"dom": "<'row'<'col-sm-12'tr>>" ,
+			"paging": false,
+			"order": [[ 0, 'desc' ]],
+			"searching": false 
+		} ;
+		if($("tr",this).length < 5){
+			opts.ordering = false;
+		}
+		$("td.fecha", tabla).each(function(){
+			var estilo = $(this).attr("class").split("iso8601-");
+			if( estilo.length > 0){
+				$(this).prepend("<div class='hidden'>"+estilo[1]+"</div>");
+			}
+		});
+		if("undefined" === typeof($(tabla).data("NTG_DATATABLES_INIT"))){
+			var padre_panel = $(this).parents(".tab-pane");
+			if($(padre_panel).length >0){
+				var padre_tab = $('a[data-toggle="tab"][href="#'+ $(padre_panel).attr("id") +'"');
+				if($(padre_panel).hasClass("in")){
+					$(tabla).DataTable( opts );
+					$(tabla).data("NTG_DATATABLES_INIT", true);
+				}else{
+					$(padre_tab).on('shown.bs.tab', function (e) {
+						var padre_panel = $($(e.target).attr("href"));
+						if("undefined" === typeof($(e.target).data("NTG_DATATABLES_INIT"))){
+							$("table.datatable-simple, .datatable-simple table",padre_panel ).each(function(){
+								$(this).DataTable( opts );
+							});
+						}
+						$(e.target).data("NTG_DATATABLES_INIT", true);
+					});
+				}
+			}else{
+				$(tabla).DataTable( opts );
+				$(tabla).data("NTG_DATATABLES_INIT", true);
+			}
+		}
+	});
+	$(".placeholder-in-title",context).each(function(){
+		$(this).attr("placeholder", $(this).attr("title"));
+	});
+	$(".download-attr a, a.download-attr", context).each(function(){
+		var cl = $(this).parent().attr("class");
+		var formatom = cl.match(/format-([^\ ]*)/);
+		if("undefined" !== typeof(cl) && cl.indexOf(" binary-") != -1 && formatom != null){
+			var name=$(this).attr("title").replace(/Ir a /,"") +"."+ formatom[1];
+			$(this).attr("download",name);
+		}
+	});
+	if( "undefined" == typeof($(document).data("NTG_MENU_FIXED"))){
+		$(window).scroll(function(){
+			var win = $(this);
+			if (win.width() >= 992) { 
+				var windowHeight = $(window).scrollTop();
+				var menu= $(".menu-principal", context);
+				if($(menu).length > 0){
+					if(windowHeight >= $(menu).offset().top  ){
+						$('.nav.navbar-nav', context).addClass("navbar-fixed-top");
+					}
+					else {
+						$('.nav.navbar-nav', context).removeClass("navbar-fixed-top");
+					}
+				}else{
+					$('.nav.navbar-nav', context).removeClass("navbar-fixed-top");
+				}
+			}else{
+				$('.nav.navbar-nav').removeClass("navbar-fixed-top");
+			}
+		});  
+		$(document).data("NTG_MENU_FIXED", true); 
+	}
+
+	//Fin scripts
+
+	// botón ver mas en listado de recuadros dentro de tabs
+	$("#tab_estadisticas_oculta, #tab_publicaciones_oculta",context).each(function(){
+		var id = $(this).attr("id");
+		$('<button type="button" class="btn btn-default btn-sm btn-leermas collapsed" '+
+			'data-toggle="collapse" data-target="#'+id+'" aria-expanded="false">'+
+			'<span class="mas">Ver más  <span class="fa fa-angle-down fa-lg margen-derecha-xs"></span></span>'+
+			'<span class="menos">Ver menos <span class="fa fa-angle-up fa-lg margen-derecha-xs"></span></span>'+
+			'</button>').insertAfter(this);
+	});
+
+	if( $("#galeria_fotos_prensa img", context).length == 0 ) {
+		$("#galeria_fotos_prensa", context).remove();
+	}
+	var l = {};
+	$("a", context).each(function(i,a){
+		if(! $(a).is("[id]")) {
+			var url = $(a).attr("href").replace("#","_");
+			if(! l.hasOwnProperty(url)){
+				$(a).attr("id", "link_" + url);
+				l[url] = 1;
+			}else{
+				$(a).attr("id", "link_" + (l[url]++) + "_" + url);
+			}
+		}
+	});
+}
+$(function(){
+	/* se corrige el orden en las tablas del clasificando 545 */
+	var map_mes = {
+		"enero":"00",
+		"febrero":"01",
+		"marzo":"02",
+		"abril":"03",
+		"mayo":"04",
+		"junio":"05",
+		"julio":"06",
+		"agosto":"07",
+		"septiembre":"08",
+		"octubre":"09",
+		"noviembre":"10",
+		"diciembre":"11"
+	};
+	$("td .pv-branch.pnid-545").filter(":visible").each(function(){
+		var td = $(this).parents("td");
+		if(!$(td).hasClass("filtrar") && $(this).text().match(/[a-zA-Z]/) != null){
+			var mes = $(" > span",this).eq(1).text().toLowerCase().trim();
+			$("<div class='hidden'>"+
+				$(" > span",this).eq(0).text()+
+				(map_mes.hasOwnProperty(mes)? map_mes[mes] : '')+"</div>")
+				.prependTo(td);
+		}
+
+	});
+
+	ntg_bootstrap_engine();
+	//se deja abierto el primer acordeon de "Donde estamos"
+	$("#acordeon_estamos .panel-collapse.collapse").first().collapse("show");
+
+	// boton subir
+	$("#top").hide();
+	$(window).scroll(function () {
+		if ($(this).scrollTop() > 200) {
+			$('#top').fadeIn();
+		} else {
+			$('#top').fadeOut();
+		}
+	});
+	$('#top a').click(function () {
+		$('body,html').animate({
+			scrollTop: 0
+		}, 800);
+		return false;
+	});
+
+	$("#paelinkreclamo a").click(function(event){
+		var caso = $("h1.titulo.page-header").text();
+		ga('send', 'event', {
+			"eventCategory": 'Accesos PAE',
+			"eventAction": 'Orientador del Reclamo',
+			"eventLabel": caso
+		});
+		//GA4
+		gtag('event', 'Orientador del Reclamo',{
+			'event_category': 'Accesos PAE',
+			'event_label': caso
+		});
+
+	});
+});
+
+
+/*
+ * ntg_responsive
+ * written by Hrodrigu
+ * http://www.newtenberg.com
+ * GPL (GPL-LICENSE.txt) licenses.
+ * Built for jQuery library
+ * http://jquery.com
+ * $Id: ntg_responsive.js 717 2015-11-16 18:54:59Z hrodrigu $
+ */
+
+/* Description:
+ * plugin que permite definir callback para los cambios de tamaño de un nodo DOM arbitrario
+ * el listado de callback se ordena por limite inferior descendentemente y se evalua en ese orden
+ */
+(function($){
+	$.fn.ntg_responsive = function(options){
+		var defaults = {
+			callbacks:[ {
+				limite: 1024,
+				change: function(){}
+			}],
+			debug:false
+		};
+		var opts = $.extend(defaults, options);
+		opts.callbacks.sort(function(a,b){return b.limite - a.limite;});
+		return this.each(function(){
+			var obj = this,
+				init_state = check(obj, opts.callbacks);
+
+			$(obj).data('ntg-responsive-callback', opts.callbacks);
+			$(obj).data('ntg-responsive-state', init_state);
+			$(obj).data('ntg-responsive-callback')[init_state].change.apply(obj);
+			$(window).resize(function(){
+				var new_state = check(obj,opts.callbacks);
+				if( $(obj).data('ntg-responsive-state') !=  new_state){
+					if(obj.debug && window.console){
+						console.log("ntg-responsive new="+new_state +" ancho="+ $(obj).width());
+					}
+					if( typeof($(obj).data('ntg-responsive-callback')[new_state].change) === 'function'){
+						$(obj).data('ntg-responsive-callback')[new_state].change.apply(obj);
+					}
+					$(obj).data('ntg-responsive-state', new_state);
+				}
+			});
+		});
+		function check(obj,callbacks){
+			var ancho= $(obj).width(),
+				i=0;
+			for(;i<callbacks.length;i++){
+				if( ancho > callbacks[i].limite ){
+					return i;
+				}
+			}
+			return callbacks.length - 1;
+		}
+	};
+		$("#menuCompartir .social-tools a").each(function(i,a){
+		var t = $("img",a).detach().attr("alt");
+		$(a).append('<span class="sr-only">'+t+'</span>');
+	});
+})(jQuery);
