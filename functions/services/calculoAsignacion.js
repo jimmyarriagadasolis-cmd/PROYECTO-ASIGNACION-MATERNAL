@@ -1,9 +1,10 @@
 /**
  * Motor de Cálculo de Asignación Maternal
  * Ministerio de las Culturas, las Artes y el Patrimonio - Chile
+ * Versión Firestore (App Hosting / Cloud Run)
  */
 
-const db = require('../database');
+const { db } = require('../database');
 /**
  * Parsea una fecha en formato YYYY-MM-DD a un objeto Date local (evita desfase UTC)
  */
@@ -14,24 +15,32 @@ function parsearFechaLocal(fechaStr) {
 }
 
 /**
- * Obtiene la configuración de tramos históricos según la fecha
+ * Obtiene la configuración de tramos históricos según la fecha (Firestore)
  * @param {Date} fecha - Fecha para la cual se necesitan los valores
  * @returns {object} - Configuración de tramos vigente en esa fecha
  */
-function obtenerConfiguracionTramos(fecha = new Date()) {
-    // Asegurar que usamos la fecha en formato local YYYY-MM-DD para la query
+async function obtenerConfiguracionTramos(fecha = new Date()) {
     const yyyy = fecha.getFullYear();
     const mm = String(fecha.getMonth() + 1).padStart(2, '0');
     const dd = String(fecha.getDate()).padStart(2, '0');
     const fechaBusqueda = `${yyyy}-${mm}-${dd}`;
 
-    // Buscar valores históricos para esta fecha
-    const valoresHistoricos = db.prepare(`
-        SELECT * FROM Valores_Asignacion_Historicos 
-        WHERE fecha_vigencia_desde <= ? AND fecha_vigencia_hasta >= ?
-        ORDER BY fecha_vigencia_desde DESC
-        LIMIT 1
-    `).get([fechaBusqueda, fechaBusqueda]);
+    // Buscar valores históricos en Firestore
+    const snapshot = await db.collection('valores_historicos')
+        .where('fecha_vigencia_desde', '<=', fechaBusqueda)
+        .orderBy('fecha_vigencia_desde', 'desc')
+        .limit(5)
+        .get();
+
+    // Filtrar en memoria por fecha_vigencia_hasta
+    let valoresHistoricos = null;
+    for (const doc of snapshot.docs) {
+        const data = doc.data();
+        if (data.fecha_vigencia_hasta >= fechaBusqueda) {
+            valoresHistoricos = data;
+            break;
+        }
+    }
 
     if (valoresHistoricos) {
         return {
@@ -44,12 +53,15 @@ function obtenerConfiguracionTramos(fecha = new Date()) {
         };
     }
 
-    // Fallback: usar valores actuales de la tabla Configuracion
+    // Fallback: usar valores actuales de la colección configuracion
     console.warn(`⚠️ No se encontraron valores históricos para ${fechaBusqueda}, usando valores actuales`);
+    const configSnapshot = await db.collection('configuracion').get();
     const config = {};
-    const rows = db.prepare('SELECT clave, valor FROM Configuracion WHERE clave LIKE ?').all('tramo%');
-    rows.forEach(row => {
-        config[row.clave] = parseFloat(row.valor);
+    configSnapshot.forEach(doc => {
+        const data = doc.data();
+        if (doc.id.startsWith('tramo')) {
+            config[doc.id] = parseFloat(data.valor);
+        }
     });
     return {
         tramo1: { limite: config.tramo1_limite, monto: config.tramo1_monto },
@@ -61,8 +73,8 @@ function obtenerConfiguracionTramos(fecha = new Date()) {
 /**
  * Determina el tramo de asignación según el sueldo imponible promedio y la fecha
  */
-function determinarTramo(sueldoImponible, fecha = new Date()) {
-    const config = obtenerConfiguracionTramos(fecha);
+async function determinarTramo(sueldoImponible, fecha = new Date()) {
+    const config = await obtenerConfiguracionTramos(fecha);
 
     if (sueldoImponible <= config.tramo1.limite) {
         return { tramo: 1, montoMensual: config.tramo1.monto, config };
@@ -92,7 +104,7 @@ function calcularMesesEntre(fechaInicio, fechaFin) {
 /**
  * Genera el desglose mensual de pagos con valores históricos correctos
  */
-function generarDesgloseMensual(fechaInicio, cantidadMeses, sueldoImponible) {
+async function generarDesgloseMensual(fechaInicio, cantidadMeses, sueldoImponible) {
     const desglose = [];
     const fecha = new Date(fechaInicio.getFullYear(), fechaInicio.getMonth(), 1);
 
@@ -102,7 +114,7 @@ function generarDesgloseMensual(fechaInicio, cantidadMeses, sueldoImponible) {
     ];
 
     for (let i = 0; i < cantidadMeses; i++) {
-        const { montoMensual, tramo, config } = determinarTramo(sueldoImponible, fecha);
+        const { montoMensual, tramo, config } = await determinarTramo(sueldoImponible, fecha);
 
         desglose.push({
             mes: nombresMeses[fecha.getMonth()],
@@ -126,9 +138,16 @@ function generarDesgloseMensual(fechaInicio, cantidadMeses, sueldoImponible) {
 /**
  * Valida si la solicitud está dentro del plazo legal (5 años)
  */
-function validarPlazoLegal(fechaInicioEmbarazo, fechaIngresoSolicitud) {
-    const configPlazo = db.prepare('SELECT valor FROM Configuracion WHERE clave = ?').get('plazo_maximo_años');
-    const plazoMaximoAños = parseInt(configPlazo?.valor || 5);
+async function validarPlazoLegal(fechaInicioEmbarazo, fechaIngresoSolicitud) {
+    let plazoMaximoAños = 5;
+    try {
+        const configDoc = await db.collection('configuracion').doc('plazo_maximo_años').get();
+        if (configDoc.exists) {
+            plazoMaximoAños = parseInt(configDoc.data().valor || 5);
+        }
+    } catch (e) {
+        console.warn('No se pudo leer plazo_maximo_años, usando default 5');
+    }
 
     const diferenciaAños = (fechaIngresoSolicitud - fechaInicioEmbarazo) / (1000 * 60 * 60 * 24 * 365.25);
 
@@ -147,7 +166,7 @@ function validarPlazoLegal(fechaInicioEmbarazo, fechaIngresoSolicitud) {
  * @param {object} datos - Datos de la solicitud
  * @returns {object} - Resultado del cálculo completo
  */
-function calcularAsignacionMaternal(datos) {
+async function calcularAsignacionMaternal(datos) {
     const {
         fechaInicioEmbarazo: fechaInicioStr,
         fechaNacimiento: fechaNacStr,
@@ -162,7 +181,7 @@ function calcularAsignacionMaternal(datos) {
 
     // Determinar tramo inicial y asegurar sueldo como entero
     const sueldoLimpio = Math.floor(parseFloat(sueldoBrutoMensual) || 0);
-    const { tramo, montoMensual, config } = determinarTramo(sueldoLimpio, fechaInicio);
+    const { tramo, montoMensual, config } = await determinarTramo(sueldoLimpio, fechaInicio);
 
     if (tramo === 4) {
         return {
@@ -180,7 +199,7 @@ function calcularAsignacionMaternal(datos) {
     }
 
     // Validar plazo legal
-    const validacionPlazo = validarPlazoLegal(fechaInicio, fechaIngreso);
+    const validacionPlazo = await validarPlazoLegal(fechaInicio, fechaIngreso);
 
     // Calcular fecha fin del embarazo (estimada o real)
     let fechaFinEmbarazo;
@@ -207,11 +226,11 @@ function calcularAsignacionMaternal(datos) {
     }
 
     // Generar desgloses con sueldo entero
-    const desgloseRetroactivo = generarDesgloseMensual(fechaInicio, mesesRetroactivos, sueldoLimpio);
+    const desgloseRetroactivo = await generarDesgloseMensual(fechaInicio, mesesRetroactivos, sueldoLimpio);
 
     let fechaInicioFuturo = new Date(fechaInicio);
     fechaInicioFuturo.setMonth(fechaInicioFuturo.getMonth() + mesesRetroactivos);
-    const desgloseFuturo = generarDesgloseMensual(fechaInicioFuturo, mesesFuturos, sueldoLimpio);
+    const desgloseFuturo = await generarDesgloseMensual(fechaInicioFuturo, mesesFuturos, sueldoLimpio);
 
     const montoTotalRetroactivo = desgloseRetroactivo.reduce((sum, mes) => sum + mes.monto, 0);
     const montoTotalFuturo = desgloseFuturo.reduce((sum, mes) => sum + mes.monto, 0);

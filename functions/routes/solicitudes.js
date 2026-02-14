@@ -170,7 +170,7 @@ router.post('/', async (req, res) => {
         }
         solicitud.rut_funcionaria = validacion.rutFormateado;
 
-        const calculo = calcularAsignacionMaternal({
+        const calculo = await calcularAsignacionMaternal({
             fechaInicioEmbarazo: solicitud.fecha_inicio_embarazo,
             fechaNacimiento: solicitud.fecha_nacimiento || null,
             fechaIngresoSolicitud: solicitud.fecha_ingreso_solicitud,
@@ -254,7 +254,7 @@ router.put('/:id', async (req, res) => {
         }
 
         if (updates.sueldo_bruto_mensual || updates.fecha_inicio_embarazo || updates.fecha_ingreso_solicitud) {
-            const calculo = calcularAsignacionMaternal({
+            const calculo = await calcularAsignacionMaternal({
                 fechaInicioEmbarazo: updates.fecha_inicio_embarazo || solicitudActual.fecha_inicio_embarazo,
                 fechaNacimiento: updates.fecha_nacimiento || solicitudActual.fecha_nacimiento,
                 fechaIngresoSolicitud: updates.fecha_ingreso_solicitud || solicitudActual.fecha_ingreso_solicitud,
@@ -357,7 +357,7 @@ router.post('/:id/cambiar-estado', async (req, res) => {
  * POST /api/solicitudes/calcular-preview
  * No requiere cambios, no interactúa con la BD.
  */
-router.post('/calcular-preview', (req, res) => {
+router.post('/calcular-preview', async (req, res) => {
     try {
         const { fecha_inicio_embarazo, fecha_nacimiento, fecha_ingreso_solicitud, sueldo_bruto_mensual } = req.body;
 
@@ -366,7 +366,7 @@ router.post('/calcular-preview', (req, res) => {
              return res.status(400).json({ success: false, error: 'El sueldo bruto es requerido' });
         }
 
-        const calculo = calcularAsignacionMaternal({
+        const calculo = await calcularAsignacionMaternal({
             fechaInicioEmbarazo: fecha_inicio_embarazo,
             fechaNacimiento: fecha_nacimiento || null,
             fechaIngresoSolicitud: fecha_ingreso_solicitud,

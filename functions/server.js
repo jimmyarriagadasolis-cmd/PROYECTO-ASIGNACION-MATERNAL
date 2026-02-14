@@ -2,7 +2,14 @@ const express = require('express');
 const cors = require('cors');
 
 // Inicializar Firebase Admin. Esto hace que la instancia 'db' de Firestore esté disponible.
-require('./database');
+try {
+    require('./database');
+    console.log('✅ Firebase Admin inicializado correctamente');
+} catch (err) {
+    console.error('❌ ERROR al inicializar Firebase Admin:', err.message);
+    console.error(err.stack);
+    process.exit(1);
+}
 
 const app = express();
 
@@ -11,18 +18,28 @@ app.use(cors({ origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Configurar rutas
+// Configurar rutas con try-catch para detectar errores de require()
 console.log("Configurando rutas de la API...");
-const solicitudesRoutes = require('./routes/solicitudes');
-const usuariosRoutes = require('./routes/usuarios');
-const reportesRoutes = require('./routes/reportes');
-const configRoutes = require('./routes/config');
+try {
+    const solicitudesRoutes = require('./routes/solicitudes');
+    console.log('  ✅ solicitudes cargado');
+    const usuariosRoutes = require('./routes/usuarios');
+    console.log('  ✅ usuarios cargado');
+    const reportesRoutes = require('./routes/reportes');
+    console.log('  ✅ reportes cargado');
+    const configRoutes = require('./routes/config');
+    console.log('  ✅ config cargado');
 
-app.use('/api/solicitudes', solicitudesRoutes);
-app.use('/api/usuarios', usuariosRoutes);
-app.use('/api/reportes', reportesRoutes);
-app.use('/api/config', configRoutes);
-console.log("Rutas configuradas.");
+    app.use('/api/solicitudes', solicitudesRoutes);
+    app.use('/api/usuarios', usuariosRoutes);
+    app.use('/api/reportes', reportesRoutes);
+    app.use('/api/config', configRoutes);
+    console.log("✅ Todas las rutas configuradas.");
+} catch (err) {
+    console.error('❌ ERROR al cargar rutas:', err.message);
+    console.error(err.stack);
+    process.exit(1);
+}
 
 // Manejo de errores global
 app.use((err, req, res, next) => {
