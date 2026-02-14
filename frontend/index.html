@@ -475,46 +475,16 @@
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Firebase SDK + Config: se cargan dinámicamente solo si firebase-config.js existe -->
-    <script>
-        // Intentar cargar Firebase solo si firebase-config.js existe (producción)
-        (function() {
-            var configScript = document.createElement('script');
-            configScript.src = 'js/firebase-config.js';
-            configScript.onerror = function() {
-                // firebase-config.js no existe → modo local, cargar app.js directamente
-                console.info('Modo local: Firebase no configurado, usando backend Express + JWT');
-                var appScript = document.createElement('script');
-                appScript.src = 'js/app.js';
-                document.body.appendChild(appScript);
-            };
-            configScript.onload = function() {
-                // firebase-config.js existe → cargar app.js después
-                var appScript = document.createElement('script');
-                appScript.src = 'js/app.js';
-                document.body.appendChild(appScript);
-            };
-            // Cargar Firebase SDK primero, luego intentar config
-            var sdk1 = document.createElement('script');
-            sdk1.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';
-            sdk1.onload = function() {
-                var sdk2 = document.createElement('script');
-                sdk2.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js';
-                sdk2.onload = function() {
-                    document.body.appendChild(configScript);
-                };
-                document.body.appendChild(sdk2);
-            };
-            sdk1.onerror = function() {
-                // Sin conexión a CDN → modo local sin Firebase SDK
-                console.info('Modo local: Firebase SDK no disponible');
-                var appScript = document.createElement('script');
-                appScript.src = 'js/app.js';
-                document.body.appendChild(appScript);
-            };
-            document.body.appendChild(sdk1);
-        })();
-    </script>
+    <!-- Firebase SDK -->
+    <script src="/__/firebase/9.22.0/firebase-app-compat.js"></script>
+    <script src="/__/firebase/9.22.0/firebase-auth-compat.js"></script>
+    <script src="/__/firebase/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- Firebase init -->
+    <script src="/__/firebase/init.js"></script>
+
+    <!-- App main script -->
+    <script src="js/app.js"></script>
 </body>
 
 </html>
