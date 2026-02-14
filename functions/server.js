@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 // Inicializar Firebase Admin. Esto hace que la instancia 'db' de Firestore esté disponible.
 try {
@@ -40,6 +41,20 @@ try {
     console.error(err.stack);
     process.exit(1);
 }
+
+// Servir archivos estáticos del frontend
+const frontendPath = path.join(__dirname, '..', 'frontend');
+app.use(express.static(frontendPath));
+console.log(`📁 Sirviendo frontend desde: ${frontendPath}`);
+
+// SPA fallback: cualquier ruta que no sea /api/* devuelve index.html
+app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+        res.sendFile(path.join(frontendPath, 'index.html'));
+    } else {
+        res.status(404).json({ error: 'Endpoint no encontrado' });
+    }
+});
 
 // Manejo de errores global
 app.use((err, req, res, next) => {
