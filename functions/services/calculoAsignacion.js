@@ -52,22 +52,31 @@ async function obtenerConfiguracionTramos(fecha = new Date()) {
         };
     }
 
-    // Fallback: usar valores actuales de la colección Configuracion
+    // Fallback: usar valores actuales del documento Configuracion/tramos
     console.warn(`⚠️ No se encontraron valores históricos para ${fechaBusqueda}, usando valores actuales`);
-    const configRef = db.collection('Configuracion');
-    const configSnapshot = await configRef.get();
-    const config = {};
-    configSnapshot.forEach(doc => {
-        const data = doc.data();
-        if (data.clave && data.clave.startsWith('tramo')) {
-            config[data.clave] = parseFloat(data.valor);
-        }
-    });
+    const tramosDoc = await db.collection('Configuracion').doc('tramos').get();
+    
+    if (tramosDoc.exists) {
+        const data = tramosDoc.data();
+        return {
+            tramo1: { limite: data.tramoA?.limite_renta || 543598, monto: data.tramoA?.monto_asignacion || 20328 },
+            tramo2: { limite: data.tramoB?.limite_renta || 794045, monto: data.tramoB?.monto_asignacion || 12475 },
+            tramo3: { limite: data.tramoC?.limite_renta || 1238450, monto: data.tramoC?.monto_asignacion || 3942 },
+            leyReferencia: data.fuente || 'Configuración actual',
+            vigenciaDesde: data.fecha_vigencia || 'N/A',
+            vigenciaHasta: 'vigente'
+        };
+    }
 
+    // Fallback final: valores hardcodeados según Ley 21.647
+    console.warn('⚠️ No se encontró documento Configuracion/tramos, usando valores por defecto');
     return {
-        tramo1: { limite: config.tramo1_limite, monto: config.tramo1_monto },
-        tramo2: { limite: config.tramo2_limite, monto: config.tramo2_monto },
-        tramo3: { limite: config.tramo3_limite, monto: config.tramo3_monto }
+        tramo1: { limite: 543598, monto: 20328 },
+        tramo2: { limite: 794045, monto: 12475 },
+        tramo3: { limite: 1238450, monto: 3942 },
+        leyReferencia: 'Ley 21.647 (valores por defecto)',
+        vigenciaDesde: '2023-12-01',
+        vigenciaHasta: 'vigente'
     };
 }
 
