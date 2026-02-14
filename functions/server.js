@@ -42,10 +42,13 @@ try {
     process.exit(1);
 }
 
-// Servir archivos estáticos del frontend
+// Servir archivos estáticos del frontend y assets
 const frontendPath = path.join(__dirname, '..', 'frontend');
+const assetsPath = path.join(__dirname, '..', 'assets');
 app.use(express.static(frontendPath));
+app.use('/assets', express.static(assetsPath));
 console.log(`📁 Sirviendo frontend desde: ${frontendPath}`);
+console.log(`📁 Sirviendo assets desde: ${assetsPath}`);
 
 // SPA fallback: cualquier ruta que no sea /api/* devuelve index.html
 app.get('*', (req, res) => {
