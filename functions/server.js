@@ -1,13 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-const { setGlobalOptions } = require('firebase-functions/v2');
-const { onRequest } = require('firebase-functions/v2/https');
 
 // Inicializar Firebase Admin. Esto hace que la instancia 'db' de Firestore esté disponible.
 require('./database');
-
-// Establecer opciones globales para las funciones (v2)
-setGlobalOptions({ region: 'us-central1', cpu: 1 });
 
 const app = express();
 
@@ -17,7 +12,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Configurar rutas
-// Ya no es necesario esperar a que la base de datos esté lista.
 console.log("Configurando rutas de la API...");
 const solicitudesRoutes = require('./routes/solicitudes');
 const usuariosRoutes = require('./routes/usuarios');
@@ -39,6 +33,10 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Exportar la Cloud Function 'api'
-// Express app se pasa directamente a onRequest.
-exports.api = onRequest(app);
+// Iniciar el servidor para App Hosting
+// El contenedor buscará que la app escuche en el puerto definido por process.env.PORT
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Servidor Express escuchando en el puerto ${PORT}`);
+  console.log('Presiona Ctrl-C para terminar.');
+});
