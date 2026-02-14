@@ -4,7 +4,8 @@
   "description": "Cloud Functions para el Sistema de Asignaciones",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "echo 'Build OK - Express server (no build step needed)'"
   },
   "author": "Ministerio de las Culturas, las Artes y el Patrimonio - Chile",
   "license": "ISC",

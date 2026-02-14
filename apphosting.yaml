@@ -2,6 +2,9 @@
 # Sistema de Asignación Maternal
 # Ministerio de las Culturas, las Artes y el Patrimonio - Chile
 
+# Root directory del backend (donde está el package.json del servidor)
+rootDirectory: functions
+
 # Cloud Run service settings
 runConfig:
   minInstances: 0
@@ -16,12 +19,3 @@ env:
     value: production
   - variable: FIREBASE_MODE
     value: "true"
-
-# Build output - incluir todo lo necesario para el servidor Express
-outputFiles:
-  serverApp:
-    include:
-      - backend-firebase
-      - frontend
-      - assets
-      - package.json
