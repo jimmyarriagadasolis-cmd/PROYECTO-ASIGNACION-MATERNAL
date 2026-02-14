@@ -21,19 +21,31 @@ router.get('/', async (req, res) => {
     try {
         const { estado, departamento, fechaDesde, fechaHasta, tramo, limit } = req.query;
         let query = db.collection('Solicitudes_Asignacion_Maternal');
+        let hasRangeFilter = false;
         if (estado) query = query.where('estado_solicitud', '==', estado);
         if (departamento) query = query.where('departamento_unidad', '==', departamento);
-        if (fechaDesde) query = query.where('fecha_ingreso_solicitud', '>=', fechaDesde);
-        if (fechaHasta) query = query.where('fecha_ingreso_solicitud', '<=', fechaHasta);
+        if (fechaDesde) { query = query.where('fecha_ingreso_solicitud', '>=', fechaDesde); hasRangeFilter = true; }
+        if (fechaHasta) { query = query.where('fecha_ingreso_solicitud', '<=', fechaHasta); hasRangeFilter = true; }
         if (tramo) query = query.where('tramo_asignacion', '==', parseInt(tramo));
-        query = query.orderBy('fecha_registro', 'desc');
+        // Solo ordenar por fecha_registro si no hay filtros de rango (evita requerir índice compuesto)
+        if (!hasRangeFilter) {
+            query = query.orderBy('fecha_registro', 'desc');
+        }
         if (limit) query = query.limit(parseInt(limit));
         const snapshot = await query.get();
-        const solicitudes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        let solicitudes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Ordenar en memoria si no se pudo en la query
+        if (hasRangeFilter) {
+            solicitudes.sort((a, b) => {
+                const fa = a.fecha_registro?.toDate ? a.fecha_registro.toDate() : new Date(a.fecha_registro || 0);
+                const fb = b.fecha_registro?.toDate ? b.fecha_registro.toDate() : new Date(b.fecha_registro || 0);
+                return fb - fa;
+            });
+        }
         res.json({ success: true, data: solicitudes, total: solicitudes.length });
     } catch (error) {
-        console.error('Error al obtener solicitudes:', error);
-        res.status(500).json({ success: false, error: 'Error interno del servidor' });
+        console.error('Error al obtener solicitudes:', error.message);
+        res.status(500).json({ success: false, error: error.message || 'Error interno del servidor' });
     }
 });
 
