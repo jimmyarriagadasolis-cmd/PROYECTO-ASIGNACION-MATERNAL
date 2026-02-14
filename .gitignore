@@ -1,72 +1,28 @@
-# Dependencias
-node_modules/
+# Dependencies
+/node_modules
+
+# Build-output
+/dist
+/build
+/.next
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Archivos de entorno
+# Archivos de configuración local
 .env
-.env.local
-.env.*.local
+.env*.local
 
-# Node modules
-node_modules/
-package-lock.json
-
-# SQLite database (original local version)
-data/*.db
-data/*.sqlite
-
-# Generated reports
-reports/*.pdf
-reports/*.xlsx
-
-# Backups
-backups/
-
-# Environment variables
-.env
-.env.local
-
-# OS files
+# Archivos del sistema operativo
 .DS_Store
 Thumbs.db
 
-# IDE files
-.vscode/
-.idea/
-
-# Firebase
-.firebase/
-functions/node_modules/
-functions/.env
-firebase-config.js
+# Archivos de Firebase
+# Excluir claves de servicio y configuraciones locales de Firebase
 serviceAccountKey.json
-.firebaserc
-*.swp
-*.swo
-*~
+*.secret.local
 
-# Archivos de compilación
-dist/
-build/
-*.min.js
-*.min.css
-
-# Uploads y archivos generados
-uploads/
-public/uploads/
-*.pdf
-
-# Configuración local
-config/local.js
-config/development.js
-
-# Cache
-.cache/
-.npm/
-.eslintcache
-
-# Coverage
-coverage/
-.nyc_output/
+# Reportes generados (opcional, si no se quieren en el repo)
+/reports

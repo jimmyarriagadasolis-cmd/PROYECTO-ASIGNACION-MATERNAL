@@ -9,7 +9,8 @@
     "build": "echo \"Build OK - Express server (no build step needed)\"",
     "test": "node backend/tests/test.js",
     "start:local": "node backend/server.js",
-    "seed": "node backend-firebase/scripts/seed-valores-historicos.js"
+    "seed": "node backend-firebase/scripts/seed-valores-historicos.js",
+    "seed:config": "node backend-firebase/scripts/seed-configuracion.js"
   },
   "keywords": [
     "asignacion",
