@@ -3,6 +3,8 @@
  * Ministerio de las Culturas, las Artes y el Patrimonio - Chile
  */
 
+// Forzando re-despliegue final: 14-feb-2026 05:35
+
 const express = require('express');
 const router = express.Router();
 const { db, admin } = require('../database'); // Importar Firestore y Firebase Admin SDK
@@ -33,7 +35,6 @@ router.get('/me', verifyFirebaseToken, async (req, res) => {
     try {
         const uid = req.user.uid;
 
-        // ¡CORREGIDO! Apuntando a la colección canónica 'usuarios' (minúscula).
         const usuariosRef = db.collection('usuarios');
         const snapshot = await usuariosRef.where('firebase_uid', '==', uid).limit(1).get();
 
