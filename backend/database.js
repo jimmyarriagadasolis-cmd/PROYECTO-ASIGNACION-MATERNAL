@@ -112,6 +112,72 @@ async function initDatabase() {
         )
     `);
 
+    // Crear tabla de valores históricos de asignación
+    db.run(`
+        CREATE TABLE IF NOT EXISTS Valores_Asignacion_Historicos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fecha_vigencia_desde TEXT NOT NULL,
+            fecha_vigencia_hasta TEXT NOT NULL,
+            ley_referencia TEXT,
+            tramo1_ingreso_desde REAL NOT NULL,
+            tramo1_ingreso_hasta REAL NOT NULL,
+            tramo1_valor_unitario REAL NOT NULL,
+            tramo1_valor_duplo REAL NOT NULL,
+            tramo2_ingreso_desde REAL NOT NULL,
+            tramo2_ingreso_hasta REAL NOT NULL,
+            tramo2_valor_unitario REAL NOT NULL,
+            tramo2_valor_duplo REAL NOT NULL,
+            tramo3_ingreso_desde REAL NOT NULL,
+            tramo3_ingreso_hasta REAL NOT NULL,
+            tramo3_valor_unitario REAL NOT NULL,
+            tramo3_valor_duplo REAL NOT NULL,
+            observaciones TEXT
+        )
+    `);
+
+    // Insertar valores históricos si la tabla está vacía
+    const historicosExist = db.exec('SELECT COUNT(*) as cnt FROM Valores_Asignacion_Historicos');
+    const historicosCount = historicosExist.length > 0 ? historicosExist[0].values[0][0] : 0;
+    if (historicosCount === 0) {
+        const valoresHistoricos = [
+            ['2026-01-01','2026-12-31','Ley 21.751',0,631976,22007,44014,631977,923067,13505,27010,923068,1439668,4267,8534,'Período 2026 - valores proyectados'],
+            ['2025-07-01','2025-12-31','Ley 21.751',0,620251,22007,44014,620252,905941,13505,27010,905942,1412957,4267,8534,'Período ingresos: enero a junio 2025'],
+            ['2025-05-01','2025-06-30','Ley 21.751',0,620251,22007,44014,620252,905941,13505,27010,905942,1412957,4267,8534,'Período ingresos: enero a junio 2024'],
+            ['2025-01-01','2025-04-30','Ley 21.578',0,598698,21243,42486,598699,874460,13036,26072,874461,1363858,4119,8238,'Período ingresos: enero a junio 2024'],
+            ['2024-07-01','2024-12-31','Ley 21.685',0,586227,21243,42486,586228,856247,13036,26072,856248,1335450,4119,8238,'Período ingresos: enero a junio 2024'],
+            ['2023-09-01','2024-06-30','Ley 21.578',0,539328,20328,40656,539329,787746,12475,24950,787747,1228614,3942,7884,'Período ingresos: enero a junio 2023'],
+            ['2023-07-01','2023-08-31','Ley 21.550',0,515879,20328,40656,515880,753496,12475,24950,753497,1175196,3942,7884,'Período ingresos: enero a junio 2023'],
+            ['2023-05-01','2023-06-30','Ley 21.550',0,515879,20328,40656,515880,753496,12475,24950,753497,1175196,3942,7884,'Período ingresos: enero a junio 2022'],
+            ['2023-01-01','2023-04-30','Ley 21.456',0,429899,16828,33656,429900,627913,10327,20654,627914,979330,3264,6528,'Período ingresos: enero a junio 2022'],
+            ['2022-08-01','2022-12-31','Ley 21.456',0,419414,16418,32836,419415,612598,10075,20150,612599,955444,3184,6368,'Período ingresos: enero a junio 2022'],
+            ['2022-07-01','2022-07-31','Ley 21.456',0,398443,15597,31194,398444,581968,9571,19142,581969,907672,3025,6050,'Período ingresos: enero a junio 2022'],
+            ['2022-05-01','2022-06-30','Ley 21.456',0,398443,15597,31194,398444,581968,9571,19142,581969,907672,3025,6050,'Período ingresos: enero a junio 2021'],
+            ['2022-01-01','2022-04-30','Ley 21.360',0,366987,14366,28732,366988,536023,8815,17630,536024,836014,2786,5572,'Período ingresos: enero a junio 2021'],
+            ['2021-07-01','2021-12-31','Ley 21.360',0,353356,13832,27664,353357,516114,8488,16976,516115,804962,2683,5366,'Período ingresos: enero a junio 2021'],
+            ['2021-05-01','2021-06-30','Ley 21.360',0,353356,13832,27664,353357,516114,8488,16976,516115,804962,2683,5366,'Período ingresos: enero a junio 2020'],
+            ['2020-09-01','2021-04-30','Ley 21.283',0,342346,13401,26802,342347,500033,8224,16448,500034,779882,2599,5198,'Período ingresos: enero a junio 2020'],
+            ['2020-07-01','2020-08-31','Ley 21.112',0,336055,13155,26310,336056,490844,8073,16146,490845,765550,2551,5102,'Período ingresos: enero a junio 2020'],
+            ['2020-03-01','2020-06-30','Ley 21.112',0,336055,13155,26310,336056,490844,8073,16146,490845,765550,2551,5102,'Período ingresos: enero a junio 2019'],
+            ['2019-07-01','2020-02-29','Ley 21.112',0,315841,12364,24728,315842,461320,7587,15174,461321,719502,2398,4796,'Período ingresos: enero a junio 2019'],
+            ['2019-03-01','2019-06-30','Ley 21.112',0,315841,12364,24728,315842,461320,7587,15174,461321,719502,2398,4796,'Período ingresos: enero a junio 2018'],
+            ['2018-08-01','2019-02-28','Ley 21.112',0,302200,11887,23774,302201,441395,7259,14518,441396,688427,2295,4590,'Período ingresos: enero a junio 2018'],
+            ['2018-07-01','2018-07-31','Ley 20.935',0,289608,11337,22674,289609,423004,6957,13914,423005,659743,2199,4398,'Período ingresos: enero a junio 2018'],
+            ['2018-01-01','2018-06-30','Ley 20.935',0,289608,11337,22674,289609,423004,6957,13914,423005,659743,2199,4398,'Período ingresos: enero a junio 2017']
+        ];
+
+        valoresHistoricos.forEach(v => {
+            db.run(`INSERT INTO Valores_Asignacion_Historicos (
+                fecha_vigencia_desde, fecha_vigencia_hasta, ley_referencia,
+                tramo1_ingreso_desde, tramo1_ingreso_hasta, tramo1_valor_unitario, tramo1_valor_duplo,
+                tramo2_ingreso_desde, tramo2_ingreso_hasta, tramo2_valor_unitario, tramo2_valor_duplo,
+                tramo3_ingreso_desde, tramo3_ingreso_hasta, tramo3_valor_unitario, tramo3_valor_duplo,
+                observaciones
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, v);
+        });
+
+        console.log('Valores históricos de asignación insertados:', valoresHistoricos.length, 'registros');
+    }
+
     // Insertar configuración inicial si no existe
     const configInicial = [
         ['tramo1_limite', '631976', 'Límite superior del Tramo 1'],

@@ -1,77 +1,81 @@
-# Guía de Deployment a Firebase
+# Guía de Deployment a Firebase App Hosting
 ## Sistema de Asignación Maternal
 
-Esta guía te ayudará a desplegar la aplicación migrada a Firebase.
+Esta guía despliega la aplicación usando **Firebase App Hosting** (Cloud Run),
+que es la opción moderna y recomendada para apps fullstack con Express.js.
+
+### ¿Por qué App Hosting en vez de Hosting + Cloud Functions?
+
+| Aspecto | Hosting + Functions (antiguo) | App Hosting (este proyecto) |
+|---------|-------------------------------|----------------------------|
+| Backend | Cloud Functions (cold starts) | Cloud Run (contenedor completo) |
+| Deploy | `firebase deploy` manual | Git-connected, CI/CD automático |
+| Arquitectura | Frontend separado del backend | Express sirve todo (como local) |
+| Escalado | Limitado por Functions | Automático con Cloud Run |
 
 ## Prerrequisitos
 
-1. **Node.js** versión 18 o superior
+1. **Node.js** versión 20 o superior
 2. **Cuenta de Google** para Firebase
-3. **Firebase CLI** instalado globalmente
+3. **Firebase CLI** v13+ instalado globalmente
+4. **Repositorio Git** (GitHub recomendado) — App Hosting se conecta a tu repo
 
 ## Paso 1: Instalar Firebase CLI
 
 ```bash
 npm install -g firebase-tools
-```
-
-## Paso 2: Login a Firebase
-
-```bash
 firebase login
 ```
 
-Esto abrirá tu navegador para autenticarte con tu cuenta de Google.
-
-## Paso 3: Crear Proyecto en Firebase Console
+## Paso 2: Crear Proyecto en Firebase Console
 
 1. Ve a [Firebase Console](https://console.firebase.google.com/)
 2. Haz clic en "Agregar proyecto"
 3. Nombre sugerido: `asignacion-maternal`
-4. **IMPORTANTE**: Activa Google Analytics si lo deseas (opcional)
-5. Haz clic en "Crear proyecto"
+4. Haz clic en "Crear proyecto"
+5. **Actualizar a Plan Blaze** (requerido para App Hosting / Cloud Run)
 
-## Paso 4: Actualizar Plan a Blaze (Pago por Uso)
+## Paso 3: Habilitar Servicios en Firebase Console
 
-> **IMPORTANTE**: Firebase Functions requiere el plan Blaze para funcionar.
+### 3.1. Firestore Database
+1. Firebase Console → Firestore Database → "Create database"
+2. Modo: **Production**
+3. Ubicación: `us-central1` (o la más cercana a Chile: `southamerica-east1`)
 
-1. En Firebase Console, ve a "Actualizar plan"
-2. Selecciona "Plan Blaze"
-3. Configura límites de gasto si lo deseas (recomendado: $10-20/mes para empezar)
+### 3.2. Authentication
+1. Firebase Console → Authentication → "Get Started"
+2. Habilita **Email/Password** como método de autenticación
 
-## Paso 5: Configurar el Proyecto Local
+### 3.3. Registrar Web App
+1. Firebase Console → Project Settings → General
+2. En "Your apps", haz clic en el ícono web (`</>`)
+3. Nombre: "Sistema Asignación Maternal"
+4. **Copia el objeto `firebaseConfig`** (lo necesitarás en el paso 5)
 
-### 5.1. Inicializar Firebase en el proyecto
+## Paso 4: Configurar el Proyecto Local
+
+### 4.1. Inicializar Firebase
 
 ```bash
-cd "c:\Users\jimmy\Documents\PROYECTO ASIGNACION MATERNAL"
 firebase init
 ```
 
-Cuando te pregunte:
-- **¿Qué características quieres habilitar?** Selecciona:
-  - ✅ Firestore
-  - ✅ Functions
-  - ✅ Hosting
-- **¿Usar proyecto existente o crear uno nuevo?** → Usar proyecto existente
-- **Selecciona proyecto:** → `asignacion-maternal` (el que creaste)
+Selecciona:
+- ✅ **Firestore** (reglas e índices)
+- ✅ **App Hosting** (nuevo)
+
+Cuando pregunte:
 - **Firestore rules file:** → `firestore.rules` (ya existe)
 - **Firestore indexes file:** → `firestore.indexes.json` (ya existe)
-- **Functions language:** → JavaScript
-- **ESLint:** → Yes
-- **Instalar dependencias ahora:** → Yes
-- **Public directory:** → `frontend`
-- **Configure as single-page app:** → Yes
-- **Set up automatic builds with GitHub:** → No
+- **App Hosting backend:** → Conectar a tu repositorio GitHub
 
-### 5.2. Actualizar configuración de Firebase en el frontend
+### 4.2. Crear firebase-config.js para el frontend
 
-1. Ve a Firebase Console → Project Settings → General
-2. En "Your apps", haz clic en el ícono web (`</>`)
-3. Registra la app con nombre: "Sistema Asignación Maternal Web"
-4. Copia el objeto `firebaseConfig`
-5. Abre `frontend/js/firebase-config.js`
-6. Reemplaza los valores con los de tu proyecto:
+```bash
+copy frontend\js\firebase-config.template.js frontend\js\firebase-config.js
+```
+
+Edita `frontend/js/firebase-config.js` con los valores de tu proyecto:
 
 ```javascript
 const firebaseConfig = {
@@ -82,183 +86,203 @@ const firebaseConfig = {
   messagingSenderId: "123456789",
   appId: "1:123456789:web:abc123def456"
 };
+firebase.initializeApp(firebaseConfig);
+const firebaseAuth = firebase.auth();
 ```
 
-## Paso 6: Instalar Dependencias de Cloud Functions
+> `firebase-config.js` está en `.gitignore`. El template está en `firebase-config.template.js`.
+
+## Paso 5: Instalar Dependencias
 
 ```bash
-cd functions
 npm install
-cd ..
 ```
 
-## Paso 7: Crear Usuario Admin Inicial
+Esto instala todas las dependencias incluyendo `firebase-admin` para el backend.
 
-Iremos a Firebase Console para crear el primer usuario:
+## Paso 6: Crear Usuario Admin Inicial
 
-1. Ve a Firebase Console → Authentication
-2. Haz clic en "Get Started"
-3. Habilita "Email/Password" como método de autenticación
-4. Haz clic en "Add user"
-5. Email: `admin@cultura.gob.cl`
-6. Password: `admin123` (cámbialo después)
-7. **Copia el UID del usuario** (lo necesitarás)
+### 6.1. En Firebase Authentication
+1. Firebase Console → Authentication → "Add user"
+2. Email: `admin@cultura.gob.cl`
+3. Password: `admin123` (cámbialo después)
+4. **Copia el UID del usuario**
 
-Ahora crea el documento del usuario en Firestore:
-
-1. Ve a Firebase Console → Firestore Database
-2. Haz clic en "Create database"
-3. Selecciona modo "Production" (las reglas ya están configuradas)
-4. Selecciona ubicación: `us-central1` (o la más cercana)
-5. Haz clic en "Start collection"
-6. ID de colección: `usuarios`
-7. ID de documento: **PEGA EL UID QUE COPIASTE**
-8. Agrega estos campos:
+### 6.2. En Firestore
+1. Firebase Console → Firestore → "Start collection"
+2. Colección: `usuarios`
+3. ID de documento: **PEGA EL UID**
+4. Campos:
    - `username` (string): `admin`
    - `nombre_completo` (string): `Administrador del Sistema`
    - `email` (string): `admin@cultura.gob.cl`
    - `rol` (string): `administrador`
    - `departamento` (string): `TI`
    - `activo` (boolean): `true`
-   - `fecha_creacion` (timestamp): *haz clic en el reloj para usar timestamp actual*
+   - `fecha_creacion` (timestamp): *timestamp actual*
 
-## Paso 8: Crear Configuración Inicial en Firestore
+## Paso 7: Poblar Datos Iniciales en Firestore
 
-Crea la colección `configuracion` con estos documentos:
-
-| Document ID | Campo: valor | Campo: fecha_actualizacion |
-|-------------|--------------|----------------------------|
-| tramo1_limite | 631976 | *timestamp actual* |
-| tramo1_monto | 22007 | *timestamp actual* |
-| tramo2_limite | 923067 | *timestamp actual* |
-| tramo2_monto | 13505 | *timestamp actual* |
-| tramo3_limite | 1439668 | *timestamp actual* |
-| tramo3_monto | 4267 | *timestamp actual* |
-| plazo_maximo_años | 5 | *timestamp actual* |
-| meses_max_embarazo | 9 | *timestamp actual* |
-| nombre_institucion | Ministerio de las Culturas, las Artes y el Patrimonio | *timestamp actual* |
-
-## Paso 9: Desplegar a Firebase
+### 7.1. Valores Históricos (23 períodos 2018-2026)
 
 ```bash
-# Desplegar todo (Firestore rules, Functions, Hosting)
-firebase deploy
-
-# O desplegar por partes:
-firebase deploy --only firestore  # Solo reglas de Firestore
-firebase deploy --only functions   # Solo Cloud Functions
-firebase deploy --only hosting     # Solo el frontend
+npm run seed
 ```
 
-**Tiempo estimado**: 3-5 minutos
+### 7.2. Configuración de Tramos
 
-## Paso 10: Obtener la URL de Cloud Functions
+Crea la colección `configuracion` en Firestore con estos documentos:
 
-Después del deploy, verás algo como:
+| Document ID | Campo: valor |
+|-------------|-------------|
+| tramo1_limite | 631976 |
+| tramo1_monto | 22007 |
+| tramo2_limite | 923067 |
+| tramo2_monto | 13505 |
+| tramo3_limite | 1439668 |
+| tramo3_monto | 4267 |
+| plazo_maximo_años | 5 |
+| meses_max_embarazo | 9 |
+| nombre_institucion | Ministerio de las Culturas, las Artes y el Patrimonio |
 
-```
-✔  Deploy complete!
+Cada documento debe tener el campo `valor` (string) y opcionalmente `fecha_actualizacion` (timestamp).
 
-Functions:
-  api(us-central1): https://us-central1-asignacion-maternal.cloudfunctions.net/api
-
-Hosting URL: https://asignacion-maternal.web.app
-```
-
-### 10.1. Actualizar URL en el frontend
-
-1. Copia la URL de Cloud Functions
-2. Abre `frontend/js/app.js`
-3. Busca la línea `const API_URL = ...`
-4. Reemplázala con:
-
-```javascript
-const API_URL = 'https://us-central1-asignacion-maternal.cloudfunctions.net/api';
-```
-
-5. ¡NO olvides hacer re-deploy del hosting!
+## Paso 8: Desplegar Reglas de Firestore
 
 ```bash
-firebase deploy --only hosting
+firebase deploy --only firestore
 ```
 
-## Paso 11: Probar la Aplicación
+## Paso 9: Desplegar con App Hosting
 
-1. Abre la **Hosting URL** en tu navegador: `https://asignacion-maternal.web.app`
-2. Deberías ver la pantalla de login
-3. Ingresa:
-   - Usuario: `admin@cultura.gob.cl`
-   - Contraseña: `admin123`
-4. Deberías entrar al dashboard
+App Hosting se despliega automáticamente al hacer push a tu repositorio conectado.
 
-## Solución de Problemas Comunes
-
-### Error: "Firebase CLI not found"
 ```bash
-npm install -g firebase-tools
+git add .
+git commit -m "Deploy Firebase App Hosting"
+git push origin main
 ```
 
-### Error: "Permission denied" al instalar Firebase CLI
+Firebase App Hosting detectará el push y:
+1. Ejecutará `npm install`
+2. Ejecutará `npm run build` (no-op para Express)
+3. Iniciará `npm start` → `node backend-firebase/server.js`
+4. El servidor Express escuchará en `process.env.PORT` (asignado por Cloud Run)
+
+### Deploy manual (sin Git)
+
 ```bash
-# En Windows, ejecuta PowerShell como Administrador
-npm install -g firebase-tools
+firebase apphosting:backends:create --project asignacion-maternal
 ```
 
-### Error: "Quota exceeded" en Cloud Functions
-- Verifica que activaste el plan Blaze
-- Revisa los límites en Firebase Console → Usage and billing
+## Paso 10: Verificar el Deploy
 
-### Error de CORS en las Cloud Functions
-- Las funciones ya tienen CORS habilitado
-- Si persiste, verifica que la URL en `API_URL` sea correcta
+Después del deploy, la URL será algo como:
+```
+https://asignacion-maternal--backend-xxxxx.us-central1.hosted.app
+```
+
+1. Abre la URL en tu navegador
+2. Ingresa: `admin@cultura.gob.cl` / `admin123`
+3. Deberías ver el dashboard
+
+## Arquitectura del Proyecto
+
+```
+├── apphosting.yaml              ← Configuración de App Hosting (Cloud Run)
+├── firestore.rules              ← Reglas de seguridad Firestore
+├── firestore.indexes.json       ← Índices compuestos
+├── package.json                 ← start: backend-firebase, dev: backend local
+│
+├── backend/                     ← Backend LOCAL (Express + SQLite)
+│   ├── server.js                ← npm run dev (desarrollo local)
+│   ├── database.js              ← SQLite con sql.js
+│   ├── routes/                  ← Rutas con queries SQL
+│   └── services/                ← Cálculo, PDF, Excel, Email
+│
+├── backend-firebase/            ← Backend PRODUCCIÓN (Express + Firestore)
+│   ├── server.js                ← npm start (App Hosting / Cloud Run)
+│   ├── middleware/auth.js       ← Firebase Auth token verification
+│   ├── routes/                  ← Rutas con Firestore queries
+│   ├── services/                ← Cálculo, PDF, Excel, Email (Firestore)
+│   ├── utils/validaciones.js    ← Validación de RUT, email, etc.
+│   └── scripts/                 ← Seed de datos iniciales
+│
+├── frontend/                    ← Frontend (HTML/CSS/JS vanilla)
+│   ├── index.html               ← Carga Firebase SDK dinámicamente
+│   ├── js/app.js                ← Dual mode: Firebase Auth o JWT local
+│   ├── js/firebase-config.template.js
+│   └── css/styles.css
+│
+└── functions/                   ← (Legacy) Cloud Functions - ya no se usa
+```
+
+## Desarrollo Local
+
+El backend local (SQLite) sigue funcionando sin cambios:
+
+```bash
+npm run dev
+# → http://localhost:3000 (Express + SQLite + JWT)
+```
+
+## Solución de Problemas
 
 ### No puedo hacer login
 - Verifica que creaste el usuario en Authentication
-- Verifica que creaste el documento en Firestore/usuarios
-- Verifica que el email coincide en ambos lados
+- Verifica que creaste el documento en Firestore/usuarios con el mismo UID
 - Abre la consola del navegador (F12) para ver errores
+
+### Error en App Hosting build
+- Verifica que `package.json` tiene scripts `build` y `start`
+- Verifica que `apphosting.yaml` existe en la raíz del proyecto
+
+### Error de permisos en Firestore
+- Verifica que desplegaste las reglas: `firebase deploy --only firestore`
+- Verifica que el usuario tiene el campo `rol` correcto en Firestore
+
+### Ver logs del servidor
+```bash
+# Logs de App Hosting / Cloud Run
+gcloud run logs read --project asignacion-maternal
+
+# O desde Firebase Console → App Hosting → Logs
+```
 
 ## Comandos Útiles
 
 ```bash
-# Ver logs de Cloud Functions en tiempo real
-firebase functions:log --only api
+# Desarrollo local (SQLite)
+npm run dev
 
-# Servir localmente (emuladores)
-firebase emulators:start
+# Poblar datos en Firestore
+npm run seed
 
-# Ver proyectos de Firebase
+# Deploy reglas Firestore
+firebase deploy --only firestore
+
+# Ver proyectos
 firebase projects:list
 
-# Cambiar de proyecto
-firebase use asignacion-maternal
+# Emuladores locales (Firestore + Auth)
+firebase emulators:start --only firestore,auth
 ```
-
-## Próximos Pasos
-
-1. **Cambiar contraseña del admin**: Ve a Authentication en Firebase Console
-2. **Configurar dominio personalizado**: Firebase Hosting → Add custom domain
-3. **Configurar envío de emails**: Implementar SendGrid o Mailgun para reportes
-4. **Generar PDFs/Excel**: Implementar servicios de pdfGenerator y excelGenerator
-5. **Monitorear costos**: Firebase Console → Usage and billing
 
 ## Estructura de Costos Estimada (Plan Blaze)
 
 Con uso moderado (<100 solicitudes/mes):
+- **Cloud Run (App Hosting)**: ~$0-2/mes (escala a cero)
 - **Firestore**: ~$0.50/mes
-- **Cloud Functions**: ~$1-2/mes
-- **Hosting**: Gratis (dentro de límites)
 - **Authentication**: Gratis (hasta 50k usuarios)
 
-**Total estimado**: $1.50 - $2.50/mes
+**Total estimado**: $0.50 - $2.50/mes
+
+> Los servicios de PDF (pdfkit), Excel (exceljs) y email (nodemailer)
+> están completamente implementados. Los archivos temporales se escriben
+> en `/tmp/` como requiere Cloud Run.
 
 ## Soporte
 
-Para problemas técnicos:
-- [Documentación de Firebase](https://firebase.google.com/docs)
+- [Firebase App Hosting Docs](https://firebase.google.com/docs/app-hosting)
+- [Firebase Console](https://console.firebase.google.com/)
 - [Stack Overflow - Firebase](https://stackoverflow.com/questions/tagged/firebase)
-- Consola de Firebase → Support → Create case
-
----
-
-**¡La aplicación está lista para usar en producción!** 🎉

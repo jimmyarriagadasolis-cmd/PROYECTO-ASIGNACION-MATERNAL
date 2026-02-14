@@ -4,9 +4,12 @@
   "description": "Sistema de Asignaciones 1.0 - Ministerio de las Culturas, las Artes y el Patrimonio",
   "main": "backend/server.js",
   "scripts": {
-    "start": "node backend/server.js",
+    "start": "node backend-firebase/server.js",
     "dev": "node backend/server.js",
-    "test": "node backend/tests/test.js"
+    "build": "echo \"Build OK - Express server (no build step needed)\"",
+    "test": "node backend/tests/test.js",
+    "start:local": "node backend/server.js",
+    "seed": "node backend-firebase/scripts/seed-valores-historicos.js"
   },
   "keywords": [
     "asignacion",
@@ -22,6 +25,7 @@
     "cors": "^2.8.5",
     "exceljs": "^4.4.0",
     "express": "^4.18.2",
+    "firebase-admin": "^12.7.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.8",
     "pdfkit": "^0.14.0",

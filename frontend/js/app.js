@@ -10,18 +10,40 @@ const state = {
     solicitudes: []
 };
 
-// IMPORTANTE: Actualizar esta URL después del deployment de Firebase
-// Será algo como: https://us-central1-TU_PROJECT_ID.cloudfunctions.net/api
-const API_URL = 'https://us-central1-TU_PROJECT_ID.cloudfunctions.net/api'; // URL de Cloud Functions
+// Detectar si Firebase está disponible (producción) o usar backend local (desarrollo)
+const FIREBASE_MODE = typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0;
+const API_URL = window.location.origin + '/api';
 
-// Inicialización
-document.addEventListener('DOMContentLoaded', () => {
+/**
+ * Fetch autenticado: agrega el token de Firebase o JWT según el modo
+ */
+async function authFetch(url, options = {}) {
+    if (!options.headers) options.headers = {};
+
+    if (FIREBASE_MODE && firebase.auth().currentUser) {
+        const idToken = await firebase.auth().currentUser.getIdToken();
+        options.headers['Authorization'] = 'Bearer ' + idToken;
+    } else if (state.token) {
+        options.headers['Authorization'] = 'Bearer ' + state.token;
+    }
+
+    return fetch(url, options);
+}
+
+// Inicialización (soporta carga dinámica y estática del script)
+function initApp() {
     initTheme();
     initNavigation();
     initForms();
     initModals();
     checkAuth();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}
 
 // === TEMA ===
 function initTheme() {
@@ -156,33 +178,77 @@ async function handleLogin(e) {
     const password = document.getElementById('loginPassword').value;
 
     try {
-        const response = await fetch(`${API_URL}/usuarios/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
+        if (FIREBASE_MODE) {
+            // Firebase Auth: el campo username se usa como email
+            const email = username.includes('@') ? username : username + '@cultura.gob.cl';
+            const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+            const uid = userCredential.user.uid;
+            const idToken = await userCredential.user.getIdToken();
 
-        const data = await response.json();
+            // Obtener datos adicionales del usuario desde la API
+            const response = await fetch(`${API_URL}/usuarios/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + idToken
+                },
+                body: JSON.stringify({ uid })
+            });
 
-        if (data.success) {
-            state.token = data.data.token;
-            state.usuario = data.data.usuario;
-            localStorage.setItem('token', state.token);
-            localStorage.setItem('usuario', JSON.stringify(state.usuario));
-            hideLogin();
-            updateUserInfo();
-            loadDashboard();
-            showToast('Bienvenido al sistema', 'success');
+            const data = await response.json();
+
+            if (data.success) {
+                state.token = idToken;
+                state.usuario = data.data.usuario;
+                localStorage.setItem('usuario', JSON.stringify(state.usuario));
+                hideLogin();
+                updateUserInfo();
+                loadDashboard();
+                showToast('Bienvenido al sistema', 'success');
+            } else {
+                showToast(data.error || 'Error al obtener datos del usuario', 'error');
+            }
         } else {
-            showToast(data.error || 'Error de autenticación', 'error');
+            // Modo local: login con JWT
+            const response = await fetch(`${API_URL}/usuarios/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                state.token = data.data.token;
+                state.usuario = data.data.usuario;
+                localStorage.setItem('token', state.token);
+                localStorage.setItem('usuario', JSON.stringify(state.usuario));
+                hideLogin();
+                updateUserInfo();
+                loadDashboard();
+                showToast('Bienvenido al sistema', 'success');
+            } else {
+                showToast(data.error || 'Error de autenticación', 'error');
+            }
         }
     } catch (error) {
-        showToast('Error de conexión', 'error');
         console.error(error);
+        if (error.code === 'auth/user-not-found') {
+            showToast('Usuario no encontrado', 'error');
+        } else if (error.code === 'auth/wrong-password') {
+            showToast('Contraseña incorrecta', 'error');
+        } else if (error.code === 'auth/invalid-email') {
+            showToast('Formato de email inválido', 'error');
+        } else {
+            showToast('Error de conexión', 'error');
+        }
     }
 }
 
 function handleLogout() {
+    if (FIREBASE_MODE && firebase.auth().currentUser) {
+        firebase.auth().signOut();
+    }
     state.token = null;
     state.usuario = null;
     localStorage.removeItem('token');
@@ -219,7 +285,7 @@ async function calcularPreview() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/solicitudes/calcular-preview`, {
+        const response = await authFetch(`${API_URL}/solicitudes/calcular-preview`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datos)
@@ -305,7 +371,7 @@ async function handleSubmitSolicitud(e) {
     datos.usuario_id = state.usuario?.id || 1;
 
     try {
-        const response = await fetch(`${API_URL}/solicitudes`, {
+        const response = await authFetch(`${API_URL}/solicitudes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datos)
@@ -337,7 +403,7 @@ async function handleSubmitSolicitud(e) {
 // === DASHBOARD ===
 async function loadDashboard() {
     try {
-        const response = await fetch(`${API_URL}/solicitudes/estadisticas`);
+        const response = await authFetch(`${API_URL}/solicitudes/estadisticas`);
         const data = await response.json();
 
         if (data.success) {
@@ -411,7 +477,7 @@ function renderChartDepartamentos(porDepartamento) {
 
 async function loadActividadReciente() {
     try {
-        const response = await fetch(`${API_URL}/solicitudes?limit=5`);
+        const response = await authFetch(`${API_URL}/solicitudes?limit=5`);
         const data = await response.json();
 
         if (data.success) {
@@ -450,7 +516,7 @@ async function loadSolicitudes() {
         let url = `${API_URL}/solicitudes`;
         if (estado) url += `?estado=${estado}`;
 
-        const response = await fetch(url);
+        const response = await authFetch(url);
         const data = await response.json();
 
         if (data.success) {
@@ -549,7 +615,7 @@ function initModals() {
 
 async function verDetalle(id) {
     try {
-        const response = await fetch(`${API_URL}/solicitudes/${id}`);
+        const response = await authFetch(`${API_URL}/solicitudes/${id}`);
         const data = await response.json();
 
         if (data.success) {
@@ -619,7 +685,7 @@ async function cambiarEstado(id, accion, motivo = null) {
         const body = { usuario_id: state.usuario?.id || 1 };
         if (motivo) body.motivo = motivo;
 
-        const response = await fetch(`${API_URL}/solicitudes/${id}/${accion}`, {
+        const response = await authFetch(`${API_URL}/solicitudes/${id}/${accion}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
@@ -659,7 +725,7 @@ async function enviarFichaPorCorreo(id) {
     if (!sol) return;
 
     try {
-        const response = await fetch(`${API_URL}/reportes/ficha/${id}/enviar`, {
+        const response = await authFetch(`${API_URL}/reportes/ficha/${id}/enviar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ destinatarios: [sol.correo_electronico] })
@@ -685,7 +751,7 @@ async function enviarReporteJefatura() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/reportes/consolidado/enviar`, {
+        const response = await authFetch(`${API_URL}/reportes/consolidado/enviar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ destinatarios: [email] })
@@ -705,7 +771,7 @@ async function enviarReporteJefatura() {
 
 async function loadHistorialCorreos() {
     try {
-        const response = await fetch(`${API_URL}/reportes/historial-correos`);
+        const response = await authFetch(`${API_URL}/reportes/historial-correos`);
         const data = await response.json();
 
         if (data.success) {
@@ -728,7 +794,7 @@ async function loadHistorialCorreos() {
 // === CONFIGURACIÓN ===
 async function loadConfiguracion() {
     try {
-        const response = await fetch(`${API_URL}/config/tramos`);
+        const response = await authFetch(`${API_URL}/config/tramos`);
         const data = await response.json();
 
         if (data.success) {
@@ -742,7 +808,7 @@ async function loadConfiguracion() {
         }
 
         // Verificar SMTP
-        const smtpResponse = await fetch(`${API_URL}/reportes/config-smtp`);
+        const smtpResponse = await authFetch(`${API_URL}/reportes/config-smtp`);
         const smtpData = await smtpResponse.json();
 
         const smtpStatus = document.getElementById('smtpStatus');
@@ -758,7 +824,7 @@ async function loadConfiguracion() {
 
 async function loadDepartamentos() {
     try {
-        const response = await fetch(`${API_URL}/config/departamentos`);
+        const response = await authFetch(`${API_URL}/config/departamentos`);
         const data = await response.json();
 
         if (data.success) {
@@ -789,7 +855,7 @@ async function guardarTramos(e) {
     };
 
     try {
-        const response = await fetch(`${API_URL}/config/tramos/actualizar`, {
+        const response = await authFetch(`${API_URL}/config/tramos/actualizar`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(tramos)
@@ -820,7 +886,7 @@ async function guardarSMTP(e) {
     try {
         for (const [clave, valor] of Object.entries(config)) {
             if (valor) {
-                await fetch(`${API_URL}/config/${clave}`, {
+                await authFetch(`${API_URL}/config/${clave}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ valor })

@@ -7,6 +7,7 @@
     <title>Sistema de Asignaciones 1.0 | Ministerio de las Culturas</title>
     <meta name="description"
         content="Sistema de gestión de asignación maternal para funcionarias del Ministerio de las Culturas, las Artes y el Patrimonio de Chile">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -474,16 +475,46 @@
     <!-- Toast Notifications -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
-    <!-- Firebase Configuration -->
-    <script src="js/firebase-config.js"></script>
-
-    <!-- Application JavaScript -->
-    <script src="js/app.js"></script>
+    <!-- Firebase SDK + Config: se cargan dinámicamente solo si firebase-config.js existe -->
+    <script>
+        // Intentar cargar Firebase solo si firebase-config.js existe (producción)
+        (function() {
+            var configScript = document.createElement('script');
+            configScript.src = 'js/firebase-config.js';
+            configScript.onerror = function() {
+                // firebase-config.js no existe → modo local, cargar app.js directamente
+                console.info('Modo local: Firebase no configurado, usando backend Express + JWT');
+                var appScript = document.createElement('script');
+                appScript.src = 'js/app.js';
+                document.body.appendChild(appScript);
+            };
+            configScript.onload = function() {
+                // firebase-config.js existe → cargar app.js después
+                var appScript = document.createElement('script');
+                appScript.src = 'js/app.js';
+                document.body.appendChild(appScript);
+            };
+            // Cargar Firebase SDK primero, luego intentar config
+            var sdk1 = document.createElement('script');
+            sdk1.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';
+            sdk1.onload = function() {
+                var sdk2 = document.createElement('script');
+                sdk2.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js';
+                sdk2.onload = function() {
+                    document.body.appendChild(configScript);
+                };
+                document.body.appendChild(sdk2);
+            };
+            sdk1.onerror = function() {
+                // Sin conexión a CDN → modo local sin Firebase SDK
+                console.info('Modo local: Firebase SDK no disponible');
+                var appScript = document.createElement('script');
+                appScript.src = 'js/app.js';
+                document.body.appendChild(appScript);
+            };
+            document.body.appendChild(sdk1);
+        })();
+    </script>
 </body>
 
 </html>
