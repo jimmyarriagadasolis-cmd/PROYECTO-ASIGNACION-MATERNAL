@@ -14,7 +14,7 @@ const { FieldValue } = require('firebase-admin/firestore');
  */
 router.get('/tramos', async (req, res) => {
     try {
-        const docRef = db.collection('configuracion').doc('tramos'); // ¡CORREGIDO!
+        const docRef = db.collection('Configuracion').doc('tramos');
         const doc = await docRef.get();
 
         if (!doc.exists) {
@@ -38,13 +38,13 @@ router.put('/tramos', async (req, res) => {
         const nuevosTramos = req.body;
         // Aquí se podría añadir una validación de la estructura de `nuevosTramos`
 
-        const docRef = db.collection('configuracion').doc('tramos'); // ¡CORREGIDO!
+        const docRef = db.collection('Configuracion').doc('tramos');
         
         await docRef.set(nuevosTramos, { merge: true }); // `merge: true` para no sobrescribir todo el documento si se envía un subset de campos.
 
-        await db.collection('configuracion').doc('metadata').update({  // ¡CORREGIDO!
-            ultima_actualizacion_tramos: FieldValue.serverTimestamp() 
-        });
+        // Update metadata timestamp (create if not exists)
+        const metaRef = db.collection('Configuracion').doc('metadata');
+        await metaRef.set({ ultima_actualizacion_tramos: FieldValue.serverTimestamp() }, { merge: true });
 
         res.json({ success: true, message: 'Tramos actualizados exitosamente' });
     } catch (error) {
@@ -106,6 +106,28 @@ router.get('/departamentos', async (req, res) => {
         res.json({ success: true, data: Array.from(departamentos).sort() });
     } catch (error) {
         console.error('Error al obtener departamentos:', error);
+        res.status(500).json({ success: false, error: 'Error interno del servidor' });
+    }
+});
+
+/**
+ * PUT /api/config/:clave
+ * Actualizar un valor de configuración individual (usado para SMTP config)
+ */
+router.put('/:clave', async (req, res) => {
+    try {
+        const { clave } = req.params;
+        const { valor } = req.body;
+        if (!valor) return res.status(400).json({ success: false, error: 'Se requiere un valor' });
+        // Store SMTP config in Configuracion/smtp document
+        if (clave.startsWith('smtp_')) {
+            await db.collection('Configuracion').doc('smtp').set({ [clave]: valor }, { merge: true });
+        } else {
+            await db.collection('Configuracion').doc('general').set({ [clave]: valor }, { merge: true });
+        }
+        res.json({ success: true, message: `Configuración '${clave}' actualizada` });
+    } catch (error) {
+        console.error('Error al actualizar configuración:', error);
         res.status(500).json({ success: false, error: 'Error interno del servidor' });
     }
 });

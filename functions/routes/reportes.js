@@ -93,7 +93,7 @@ router.get('/consolidado', async (req, res) => {
         if (fechaDesde) query = query.where('fecha_ingreso_solicitud', '>=', fechaDesde);
         if (fechaHasta) query = query.where('fecha_ingreso_solicitud', '<=', fechaHasta);
         
-        const snapshot = await query.orderBy('fecha_registro', 'desc').get();
+        const snapshot = await query.get();
         const solicitudes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         const filename = `Informe_Consolidado_${new Date().toISOString().split('T')[0]}.xlsx`;
@@ -124,7 +124,7 @@ router.post('/consolidado/enviar', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Se requieren destinatarios' });
         }
 
-        const snapshot = await db.collection('Solicitudes_Asignacion_Maternal').orderBy('fecha_registro', 'desc').get();
+        const snapshot = await db.collection('Solicitudes_Asignacion_Maternal').get();
         const solicitudes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
         const filename = `Informe_Consolidado_${new Date().toISOString().split('T')[0]}.xlsx`;
@@ -146,6 +146,21 @@ router.post('/consolidado/enviar', async (req, res) => {
     } catch (error) {
         console.error('Error al enviar informe consolidado:', error);
         res.status(500).json({ success: false, error: 'Error interno del servidor' });
+    }
+});
+
+/**
+ * GET /api/reportes/config-smtp
+ * Verificar estado de configuración SMTP
+ */
+router.get('/config-smtp', async (req, res) => {
+    try {
+        const { verificarConfiguracionSMTP } = require('../services/emailService');
+        const config = await verificarConfiguracionSMTP();
+        res.json({ success: true, data: config });
+    } catch (error) {
+        console.error('Error al verificar SMTP:', error);
+        res.json({ success: true, data: { configurado: false } });
     }
 });
 

@@ -21,27 +21,22 @@ router.get('/', async (req, res) => {
     try {
         const { estado, departamento, fechaDesde, fechaHasta, tramo, limit } = req.query;
         let query = db.collection('Solicitudes_Asignacion_Maternal');
-        let hasRangeFilter = false;
+        // Apply equality filters only (no orderBy to avoid composite index requirement)
         if (estado) query = query.where('estado_solicitud', '==', estado);
         if (departamento) query = query.where('departamento_unidad', '==', departamento);
-        if (fechaDesde) { query = query.where('fecha_ingreso_solicitud', '>=', fechaDesde); hasRangeFilter = true; }
-        if (fechaHasta) { query = query.where('fecha_ingreso_solicitud', '<=', fechaHasta); hasRangeFilter = true; }
         if (tramo) query = query.where('tramo_asignacion', '==', parseInt(tramo));
-        // Solo ordenar por fecha_registro si no hay filtros de rango (evita requerir índice compuesto)
-        if (!hasRangeFilter) {
-            query = query.orderBy('fecha_registro', 'desc');
-        }
-        if (limit) query = query.limit(parseInt(limit));
         const snapshot = await query.get();
         let solicitudes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // Ordenar en memoria si no se pudo en la query
-        if (hasRangeFilter) {
-            solicitudes.sort((a, b) => {
-                const fa = a.fecha_registro?.toDate ? a.fecha_registro.toDate() : new Date(a.fecha_registro || 0);
-                const fb = b.fecha_registro?.toDate ? b.fecha_registro.toDate() : new Date(b.fecha_registro || 0);
-                return fb - fa;
-            });
-        }
+        // Apply date range filters in memory
+        if (fechaDesde) solicitudes = solicitudes.filter(s => s.fecha_ingreso_solicitud >= fechaDesde);
+        if (fechaHasta) solicitudes = solicitudes.filter(s => s.fecha_ingreso_solicitud <= fechaHasta);
+        // Sort in memory by fecha_registro descending
+        solicitudes.sort((a, b) => {
+            const fa = a.fecha_registro?._seconds || a.fecha_registro?.seconds || 0;
+            const fb = b.fecha_registro?._seconds || b.fecha_registro?.seconds || 0;
+            return fb - fa;
+        });
+        if (limit) solicitudes = solicitudes.slice(0, parseInt(limit));
         res.json({ success: true, data: solicitudes, total: solicitudes.length });
     } catch (error) {
         console.error('Error al obtener solicitudes:', error.message);

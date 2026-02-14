@@ -1,34 +1,39 @@
 /**
- * Servicio de Correo Electrónico
+ * Servicio de Correo Electrónico - Versión Firestore
  * Ministerio de las Culturas, las Artes y el Patrimonio - Chile
  */
 
 const nodemailer = require('nodemailer');
-const db = require('../database');
+const { db } = require('../database');
+const { FieldValue } = require('firebase-admin/firestore');
 const path = require('path');
 
 /**
- * Obtiene la configuración SMTP de la base de datos
+ * Obtiene la configuración SMTP de Firestore
  */
-function obtenerConfigSMTP() {
-    const config = {};
-    const rows = db.prepare('SELECT clave, valor FROM Configuracion WHERE clave LIKE ?').all('smtp%');
-    rows.forEach(row => {
-        config[row.clave] = row.valor;
-    });
-    return {
-        host: config.smtp_host || '',
-        port: parseInt(config.smtp_port) || 587,
-        user: config.smtp_user || '',
-        pass: config.smtp_pass || ''
-    };
+async function obtenerConfigSMTP() {
+    try {
+        const smtpDoc = await db.collection('Configuracion').doc('smtp').get();
+        if (smtpDoc.exists) {
+            const data = smtpDoc.data();
+            return {
+                host: data.smtp_host || '',
+                port: parseInt(data.smtp_port) || 587,
+                user: data.smtp_user || '',
+                pass: data.smtp_pass || ''
+            };
+        }
+    } catch (e) {
+        console.error('Error al obtener config SMTP:', e.message);
+    }
+    return { host: '', port: 587, user: '', pass: '' };
 }
 
 /**
  * Crea el transporter de nodemailer
  */
-function crearTransporter() {
-    const smtpConfig = obtenerConfigSMTP();
+async function crearTransporter() {
+    const smtpConfig = await obtenerConfigSMTP();
 
     if (!smtpConfig.host || !smtpConfig.user) {
         return null; // SMTP no configurado
@@ -52,20 +57,19 @@ function crearTransporter() {
  * @param {Array} destinatarios - Lista de correos
  */
 async function enviarFichaIndividual(solicitud, pdfPath, destinatarios) {
-    const transporter = crearTransporter();
+    const transporter = await crearTransporter();
 
     if (!transporter) {
-        // Registrar como pendiente si SMTP no está configurado
-        registrarEnvioCorreo(solicitud.id_solicitud, 'ficha_individual', destinatarios.join(', '),
+        await registrarEnvioCorreo(solicitud.id, 'ficha_individual', destinatarios.join(', '),
             'Ficha de Asignación Maternal', 'pendiente', 'SMTP no configurado');
         return { success: false, error: 'El servidor de correo no está configurado' };
     }
 
-    const nombreInstitucion = db.prepare('SELECT valor FROM Configuracion WHERE clave = ?')
-        .get('nombre_institucion')?.valor || 'Ministerio de las Culturas';
+    const nombreInstitucion = 'Ministerio de las Culturas';
+    const smtpConfig = await obtenerConfigSMTP();
 
     const mailOptions = {
-        from: `"${nombreInstitucion}" <${obtenerConfigSMTP().user}>`,
+        from: `"${nombreInstitucion}" <${smtpConfig.user}>`,
         to: destinatarios.join(', '),
         subject: `Ficha de Asignación Maternal - ${solicitud.nombre_completo}`,
         html: `
@@ -131,11 +135,11 @@ async function enviarFichaIndividual(solicitud, pdfPath, destinatarios) {
 
     try {
         await transporter.sendMail(mailOptions);
-        registrarEnvioCorreo(solicitud.id_solicitud, 'ficha_individual', destinatarios.join(', '),
+        await registrarEnvioCorreo(solicitud.id, 'ficha_individual', destinatarios.join(', '),
             mailOptions.subject, 'enviado');
         return { success: true, message: 'Correo enviado exitosamente' };
     } catch (error) {
-        registrarEnvioCorreo(solicitud.id_solicitud, 'ficha_individual', destinatarios.join(', '),
+        await registrarEnvioCorreo(solicitud.id, 'ficha_individual', destinatarios.join(', '),
             mailOptions.subject, 'fallido', error.message);
         return { success: false, error: error.message };
     }
@@ -148,21 +152,20 @@ async function enviarFichaIndividual(solicitud, pdfPath, destinatarios) {
  * @param {object} resumen - Datos del resumen
  */
 async function enviarReporteConsolidado(excelPath, destinatarios, resumen) {
-    const transporter = crearTransporter();
+    const transporter = await crearTransporter();
 
     if (!transporter) {
-        registrarEnvioCorreo(null, 'reporte_consolidado', destinatarios.join(', '),
+        await registrarEnvioCorreo(null, 'reporte_consolidado', destinatarios.join(', '),
             'Reporte Consolidado', 'pendiente', 'SMTP no configurado');
         return { success: false, error: 'El servidor de correo no está configurado' };
     }
 
-    const nombreInstitucion = db.prepare('SELECT valor FROM Configuracion WHERE clave = ?')
-        .get('nombre_institucion')?.valor || 'Ministerio de las Culturas';
-
+    const nombreInstitucion = 'Ministerio de las Culturas';
+    const smtpConfig = await obtenerConfigSMTP();
     const fechaActual = new Date().toLocaleDateString('es-CL');
 
     const mailOptions = {
-        from: `"${nombreInstitucion}" <${obtenerConfigSMTP().user}>`,
+        from: `"${nombreInstitucion}" <${smtpConfig.user}>`,
         to: destinatarios.join(', '),
         subject: `Reporte Consolidado de Asignación Maternal - ${fechaActual}`,
         html: `
@@ -218,58 +221,40 @@ async function enviarReporteConsolidado(excelPath, destinatarios, resumen) {
 
     try {
         await transporter.sendMail(mailOptions);
-        registrarEnvioCorreo(null, 'reporte_consolidado', destinatarios.join(', '),
+        await registrarEnvioCorreo(null, 'reporte_consolidado', destinatarios.join(', '),
             mailOptions.subject, 'enviado');
         return { success: true, message: 'Reporte enviado exitosamente' };
     } catch (error) {
-        registrarEnvioCorreo(null, 'reporte_consolidado', destinatarios.join(', '),
+        await registrarEnvioCorreo(null, 'reporte_consolidado', destinatarios.join(', '),
             mailOptions.subject, 'fallido', error.message);
         return { success: false, error: error.message };
     }
 }
 
 /**
- * Registra el envío de correo en la base de datos
+ * Registra el envío de correo en Firestore
  */
-function registrarEnvioCorreo(solicitudId, tipo, destinatarios, asunto, estado, error = null) {
-    db.prepare(`
-        INSERT INTO Historial_Correos (solicitud_id, tipo_correo, destinatarios, asunto, estado, error_mensaje)
-        VALUES (?, ?, ?, ?, ?, ?)
-    `).run(solicitudId, tipo, destinatarios, asunto, estado, error);
-}
-
-/**
- * Obtiene el historial de correos enviados
- */
-function obtenerHistorialCorreos(filtros = {}) {
-    let query = 'SELECT * FROM Historial_Correos WHERE 1=1';
-    const params = [];
-
-    if (filtros.solicitud_id) {
-        query += ' AND solicitud_id = ?';
-        params.push(filtros.solicitud_id);
+async function registrarEnvioCorreo(solicitudId, tipo, destinatarios, asunto, estado, error = null) {
+    try {
+        await db.collection('Historial_Correos').add({
+            solicitud_id: solicitudId,
+            tipo_correo: tipo,
+            destinatarios: destinatarios,
+            asunto: asunto,
+            estado: estado,
+            error_mensaje: error,
+            fecha_envio: FieldValue.serverTimestamp()
+        });
+    } catch (e) {
+        console.error('Error al registrar envío de correo:', e.message);
     }
-
-    if (filtros.tipo) {
-        query += ' AND tipo_correo = ?';
-        params.push(filtros.tipo);
-    }
-
-    if (filtros.estado) {
-        query += ' AND estado = ?';
-        params.push(filtros.estado);
-    }
-
-    query += ' ORDER BY fecha_envio DESC LIMIT 100';
-
-    return db.prepare(query).all(params);
 }
 
 /**
  * Verifica si el SMTP está configurado
  */
-function verificarConfiguracionSMTP() {
-    const config = obtenerConfigSMTP();
+async function verificarConfiguracionSMTP() {
+    const config = await obtenerConfigSMTP();
     return {
         configurado: !!(config.host && config.user && config.pass),
         host: config.host,
@@ -281,7 +266,6 @@ function verificarConfiguracionSMTP() {
 module.exports = {
     enviarFichaIndividual,
     enviarReporteConsolidado,
-    obtenerHistorialCorreos,
     verificarConfiguracionSMTP,
     obtenerConfigSMTP
 };

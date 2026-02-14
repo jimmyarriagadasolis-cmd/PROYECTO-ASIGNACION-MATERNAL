@@ -228,12 +228,32 @@ function initForms() {
     document.getElementById('fechaIngresoSolicitud').valueAsDate = new Date();
     document.getElementById('btnBuscar').addEventListener('click', loadSolicitudes);
     document.getElementById('filtroEstado').addEventListener('change', loadSolicitudes);
-    document.getElementById('btnExportarExcel').addEventListener('click', () => {
-        window.location.href = `${API_URL}/reportes/consolidado?${getFilterParams()}`;
+    document.getElementById('btnExportarExcel').addEventListener('click', async () => {
+        try {
+            const response = await authFetch(`${API_URL}/reportes/consolidado?${getFilterParams()}`);
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `Consolidado_${new Date().toISOString().split('T')[0]}.xlsx`;
+                document.body.appendChild(a); a.click(); a.remove();
+                window.URL.revokeObjectURL(url);
+            } else { showToast('Error al exportar Excel', 'error'); }
+        } catch (error) { showToast('Error al exportar', 'error'); }
     });
     document.getElementById('btnGenerarFicha').addEventListener('click', generarFichaIndividual);
-    document.getElementById('btnGenerarConsolidado').addEventListener('click', () => {
-        window.location.href = `${API_URL}/reportes/consolidado`;
+    document.getElementById('btnGenerarConsolidado').addEventListener('click', async () => {
+        try {
+            const response = await authFetch(`${API_URL}/reportes/consolidado`);
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `Consolidado_${new Date().toISOString().split('T')[0]}.xlsx`;
+                document.body.appendChild(a); a.click(); a.remove();
+                window.URL.revokeObjectURL(url);
+            } else { showToast('Error al generar consolidado', 'error'); }
+        } catch (error) { showToast('Error al generar', 'error'); }
     });
     document.getElementById('btnEnviarJefatura').addEventListener('click', enviarReporteJefatura);
     document.getElementById('formTramos').addEventListener('submit', guardarTramos);
@@ -430,13 +450,13 @@ function renderSolicitudes(solicitudes) {
     }
     tbody.innerHTML = solicitudes.map(sol => `
         <tr>
-            <td>${sol.id_solicitud}</td><td>${sol.rut_funcionaria}</td><td>${sol.nombre_completo}</td>
+            <td>${sol.id.substring(0, 8)}...</td><td>${sol.rut_funcionaria}</td><td>${sol.nombre_completo}</td>
             <td>${sol.departamento_unidad}</td><td>Tramo ${sol.tramo_asignacion}</td><td>${formatMoney(sol.monto_total_pagable)}</td>
             <td><span class="badge badge-${getEstadoClass(sol.estado_solicitud)}">${sol.estado_solicitud}</span></td>
             <td>${formatDate(sol.fecha_ingreso_solicitud)}</td>
             <td class="actions">
-                <button class="btn-icon view" onclick="verDetalle(${sol.id_solicitud})" title="Ver detalle">👁️</button>
-                <button class="btn-icon edit" onclick="descargarPDF(${sol.id_solicitud})" title="Descargar PDF">📄</button>
+                <button class="btn-icon view" onclick="verDetalle('${sol.id}')" title="Ver detalle">👁️</button>
+                <button class="btn-icon edit" onclick="descargarPDF('${sol.id}')" title="Descargar PDF">📄</button>
             </td>
         </tr>`).join('');
 }
@@ -460,15 +480,15 @@ function initModals() {
             }
         });
     });
-    document.getElementById('btnDescargarPDF').addEventListener('click', () => state.solicitudActual && descargarPDF(state.solicitudActual.id_solicitud));
-    document.getElementById('btnAprobar').addEventListener('click', () => state.solicitudActual && cambiarEstado(state.solicitudActual.id_solicitud, 'aprobar'));
+    document.getElementById('btnDescargarPDF').addEventListener('click', () => state.solicitudActual && descargarPDF(state.solicitudActual.id));
+    document.getElementById('btnAprobar').addEventListener('click', () => state.solicitudActual && cambiarEstado(state.solicitudActual.id, 'Aprobada'));
     document.getElementById('btnRechazar').addEventListener('click', () => {
         if (state.solicitudActual) {
             const motivo = prompt('Ingrese el motivo del rechazo:');
-            if (motivo) cambiarEstado(state.solicitudActual.id_solicitud, 'rechazar', motivo);
+            if (motivo) cambiarEstado(state.solicitudActual.id, 'Rechazada', motivo);
         }
     });
-    document.getElementById('btnEnviarCorreo').addEventListener('click', () => state.solicitudActual && enviarFichaPorCorreo(state.solicitudActual.id_solicitud));
+    document.getElementById('btnEnviarCorreo').addEventListener('click', () => state.solicitudActual && enviarFichaPorCorreo(state.solicitudActual.id));
 }
 
 async function verDetalle(id) {
@@ -496,14 +516,14 @@ function renderDetalle(sol) {
         <div class="detalle-total"><label>MONTO TOTAL A PAGAR</label><span>${formatMoney(sol.monto_total_pagable)}</span></div>`;
 }
 
-async function cambiarEstado(id, accion, motivo = null) {
+async function cambiarEstado(id, estado, motivo = null) {
     try {
-        const body = { usuario_id: state.usuario.id };
+        const body = { estado, usuario_id: state.usuario?.id || 'sistema' };
         if (motivo) body.motivo = motivo;
-        const response = await authFetch(`${API_URL}/solicitudes/${id}/${accion}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const response = await authFetch(`${API_URL}/solicitudes/${id}/cambiar-estado`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         const data = await response.json();
         if (data.success) {
-            showToast(`Solicitud ${accion === 'aprobar' ? 'aprobada' : 'rechazada'}`, 'success');
+            showToast(`Solicitud ${estado.toLowerCase()}`, 'success');
             document.getElementById('modalDetalle').classList.remove('active');
             loadSolicitudes();
             loadDashboard();
@@ -513,7 +533,24 @@ async function cambiarEstado(id, accion, motivo = null) {
     } catch (error) { showToast('Error al cambiar estado', 'error'); }
 }
 
-function descargarPDF(id) { window.open(`${API_URL}/reportes/ficha/${id}?token=${state.token}`, '_blank'); }
+async function descargarPDF(id) {
+    try {
+        const response = await authFetch(`${API_URL}/reportes/ficha/${id}`);
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Ficha_${id}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } else {
+            showToast('Error al descargar PDF', 'error');
+        }
+    } catch (error) { showToast('Error al descargar PDF', 'error'); console.error(error); }
+}
 
 function generarFichaIndividual() {
     const id = document.getElementById('inputIdFicha').value;
@@ -560,10 +597,13 @@ async function loadConfiguracion() {
         ]);
         const tramosData = await tramosRes.json();
         if (tramosData.success) {
-            const tramos = tramosData.data;
-            document.getElementById('tramo1Limite').value = tramos.tramo1.limite; document.getElementById('tramo1Monto').value = tramos.tramo1.monto;
-            document.getElementById('tramo2Limite').value = tramos.tramo2.limite; document.getElementById('tramo2Monto').value = tramos.tramo2.monto;
-            document.getElementById('tramo3Limite').value = tramos.tramo3.limite; document.getElementById('tramo3Monto').value = tramos.tramo3.monto;
+            const t = tramosData.data;
+            document.getElementById('tramo1Limite').value = t.tramoA?.limite_renta || t.tramo1?.limite || '';
+            document.getElementById('tramo1Monto').value = t.tramoA?.monto_asignacion || t.tramo1?.monto || '';
+            document.getElementById('tramo2Limite').value = t.tramoB?.limite_renta || t.tramo2?.limite || '';
+            document.getElementById('tramo2Monto').value = t.tramoB?.monto_asignacion || t.tramo2?.monto || '';
+            document.getElementById('tramo3Limite').value = t.tramoC?.limite_renta || t.tramo3?.limite || '';
+            document.getElementById('tramo3Monto').value = t.tramoC?.monto_asignacion || t.tramo3?.monto || '';
         }
         const smtpData = await smtpRes.json();
         const smtpStatus = document.getElementById('smtpStatus');
@@ -593,7 +633,12 @@ async function guardarTramos(e) {
         tramo3: { limite: document.getElementById('tramo3Limite').value, monto: document.getElementById('tramo3Monto').value }
     };
     try {
-        const response = await authFetch(`${API_URL}/config/tramos/actualizar`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(tramos) });
+        const tramosFirestore = {
+            tramoA: { limite_renta: parseInt(tramos.tramo1.limite), monto_asignacion: parseInt(tramos.tramo1.monto) },
+            tramoB: { limite_renta: parseInt(tramos.tramo2.limite), monto_asignacion: parseInt(tramos.tramo2.monto) },
+            tramoC: { limite_renta: parseInt(tramos.tramo3.limite), monto_asignacion: parseInt(tramos.tramo3.monto) }
+        };
+        const response = await authFetch(`${API_URL}/config/tramos`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(tramosFirestore) });
         const data = await response.json();
         if (data.success) showToast('Tramos actualizados', 'success');
         else showToast(data.error, 'error');
@@ -624,7 +669,13 @@ function formatMoney(amount) {
 
 function formatDate(dateStr) {
     if (!dateStr) return 'N/A';
+    // Firestore Timestamps have toDate(), strings are parsed directly
+    if (dateStr._seconds || dateStr.seconds) {
+        const ts = dateStr._seconds || dateStr.seconds;
+        return new Date(ts * 1000).toLocaleDateString('es-CL');
+    }
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'N/A';
     const utcDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
     return utcDate.toLocaleDateString('es-CL', { timeZone: 'UTC' });
 }

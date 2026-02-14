@@ -165,7 +165,7 @@ async function crearListadoDetallado(sheet, solicitudes) {
     // Datos
     solicitudes.forEach(s => {
         const row = sheet.addRow([
-            s.id_solicitud,
+            s.id,
             s.rut_funcionaria,
             s.nombre_completo,
             s.departamento_unidad,
