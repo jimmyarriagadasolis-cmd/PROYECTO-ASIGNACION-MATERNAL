@@ -14,7 +14,7 @@ const { FieldValue } = require('firebase-admin/firestore');
  */
 router.get('/tramos', async (req, res) => {
     try {
-        const docRef = db.collection('Configuracion').doc('tramos');
+        const docRef = db.collection('configuracion').doc('tramos'); // ¡CORREGIDO!
         const doc = await docRef.get();
 
         if (!doc.exists) {
@@ -38,11 +38,11 @@ router.put('/tramos', async (req, res) => {
         const nuevosTramos = req.body;
         // Aquí se podría añadir una validación de la estructura de `nuevosTramos`
 
-        const docRef = db.collection('Configuracion').doc('tramos');
+        const docRef = db.collection('configuracion').doc('tramos'); // ¡CORREGIDO!
         
         await docRef.set(nuevosTramos, { merge: true }); // `merge: true` para no sobrescribir todo el documento si se envía un subset de campos.
 
-        await db.collection('Configuracion').doc('metadata').update({ 
+        await db.collection('configuracion').doc('metadata').update({  // ¡CORREGIDO!
             ultima_actualizacion_tramos: FieldValue.serverTimestamp() 
         });
 
