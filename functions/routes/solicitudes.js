@@ -9,6 +9,7 @@ const { db } = require('../database'); // Instancia de Firestore
 const { FieldValue } = require('firebase-admin/firestore');
 const { calcularAsignacionMaternal } = require('../services/calculoAsignacion');
 const { validarSolicitud } = require('../utils/validaciones');
+const { getNextSolicitudId, getContadorEstado, resetContadorSolicitudes, asignarIdsExistente } = require('../services/idGenerator');
 
 // Helper para normalizar datos
 function normalizeDepartamento(value) {
@@ -31,7 +32,12 @@ router.get('/', async (req, res) => {
             query = query.where('rut_funcionaria', '==', rutNormalizado);
         }
         const snapshot = await query.get();
-        let solicitudes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        let solicitudes = snapshot.docs.map(doc => {
+            const data = doc.data();
+            // Usar ID numérico si existe, si no usar el UUID
+            const displayId = data.id_numerico || doc.id;
+            return { id: displayId, uuid: doc.id, ...data };
+        });
         
         // Apply text search filter in memory (for nombre)
         if (busqueda) {
@@ -136,7 +142,11 @@ router.post('/', async (req, res) => {
             sueldoBrutoMensual: parseFloat(solicitud.sueldo_bruto_mensual)
         });
 
+        // *** GENERAR ID CORRELATIVO ***
+        const idNumerico = await getNextSolicitudId();
+
         const nuevaSolicitud = {
+            id_numerico: idNumerico, // ID correlativo
             rut_funcionaria: solicitud.rut_funcionaria,
             nombre_completo: solicitud.nombre_completo.trim(),
             departamento_unidad: solicitud.departamento_unidad.trim(),
@@ -158,6 +168,7 @@ router.post('/', async (req, res) => {
             usuario_registro: solicitud.usuario_id || 'sistema',
             desglose_mensual: calculo.desgloseMensual,
             fecha_registro: FieldValue.serverTimestamp(),
+            id_asignado_at: new Date(), // Fecha de asignación del ID
         };
 
         const docRef = await db.collection('Solicitudes_Asignacion_Maternal').add(nuevaSolicitud);
@@ -165,7 +176,11 @@ router.post('/', async (req, res) => {
         res.status(201).json({
             success: true,
             message: 'Solicitud creada exitosamente',
-            data: { id_solicitud: docRef.id, calculo: calculo }
+            data: { 
+                id_solicitud: docRef.id, 
+                id_numerico: idNumerico, // ID correlativo
+                calculo: calculo 
+            }
         });
 
     } catch (error) {
@@ -297,6 +312,58 @@ router.post('/calcular-preview', async (req, res) => { // <-- async
         res.json({ success: true, data: calculo });
     } catch (error) {
         console.error('Error al calcular preview:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// === RUTAS ADMINISTRATIVAS PARA IDS CORRELATIVOS ===
+
+/**
+ * GET /api/solicitudes/ids/estado
+ * Obtener estado actual del contador de IDs
+ */
+router.get('/ids/estado', async (req, res) => {
+    try {
+        const estado = await getContadorEstado();
+        res.json({ success: true, data: estado });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/solicitudes/ids/reset
+ * Reiniciar contador de IDs (solo admin)
+ */
+router.post('/ids/reset', async (req, res) => {
+    try {
+        const { nuevoId = 0 } = req.body;
+        
+        // Validación de seguridad
+        if (nuevoId < 0) {
+            return res.status(400).json({ success: false, error: 'El ID no puede ser negativo' });
+        }
+        
+        await resetContadorSolicitudes(nuevoId);
+        res.json({ 
+            success: true, 
+            message: `Contador reiniciado a ${nuevoId}`,
+            data: { nuevo_ultimo_id: nuevoId }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/solicitudes/ids/migrar
+ * Asignar IDs correlativos a solicitudes existentes
+ */
+router.post('/ids/migrar', async (req, res) => {
+    try {
+        const resultado = await asignarIdsExistente();
+        res.json({ success: true, data: resultado });
+    } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
