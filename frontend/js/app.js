@@ -607,6 +607,31 @@ async function loadActividadReciente() {
     }
 }
 
+// Función para exportar Excel desde el dashboard (sin filtros)
+async function exportarExcelDesdeDashboard() {
+    try {
+        showToast('Generando Excel...', 'info');
+        const response = await authFetch(`${API_URL}/reportes/consolidado`);
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; 
+            a.download = `Consolidado_${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(a); 
+            a.click(); 
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            showToast('Excel exportado exitosamente', 'success');
+        } else { 
+            showToast('Error al exportar Excel', 'error'); 
+        }
+    } catch (error) { 
+        showToast('Error al exportar', 'error'); 
+        console.error('Error exportando Excel:', error);
+    }
+}
+
 function getFilterParams() {
     const params = new URLSearchParams();
     const estado = document.getElementById('filtroEstado').value;

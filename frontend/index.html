@@ -117,7 +117,7 @@
                 <div class="requests-section">
                     <div class="section-header">
                         <h2>Solicitudes Recientes</h2>
-                        <a href="#" class="view-all-link" onclick="showSection('listado')">Ver todas →</a>
+                        <a href="#" class="view-all-link" onclick="navigateTo('listado'); return false;">Ver todas →</a>
                     </div>
                     
                     <div class="requests-table">
@@ -141,11 +141,11 @@
                     <div class="quick-actions">
                         <h3>Acciones Rápidas</h3>
                         <div class="action-buttons">
-                            <button class="btn btn-primary btn-full" onclick="showSection('nueva-solicitud')">
+                            <button class="btn btn-primary btn-full" onclick="navigateTo('nueva-solicitud')">
                                 <span class="btn-icon">➕</span>
                                 Nueva Solicitud
                             </button>
-                            <button class="btn btn-outline btn-full" onclick="exportarExcel()">
+                            <button class="btn btn-outline btn-full" onclick="exportarExcelDesdeDashboard()">
                                 <span class="btn-icon">📥</span>
                                 Exportar Excel
                             </button>
