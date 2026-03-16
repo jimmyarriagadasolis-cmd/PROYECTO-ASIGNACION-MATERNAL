@@ -1448,3 +1448,32 @@ body {
     color: var(--text-secondary, #4a5568);
     margin-top: 2px;
 }
+
+.ficha-result-item .ficha-detalle {
+    font-size: 0.8rem;
+    color: var(--text-muted, #718096);
+    margin-top: 4px;
+}
+
+.ficha-activa {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+    border: 2px solid var(--primary-500, #3182ce) !important;
+    box-shadow: 0 4px 12px rgba(49, 130, 206, 0.15);
+}
+
+.badge-activa {
+    background: var(--primary-600, #3182ce) !important;
+    color: white !important;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 8px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.8; }
+    100% { opacity: 1; }
+}

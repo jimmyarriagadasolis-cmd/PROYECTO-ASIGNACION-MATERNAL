@@ -685,18 +685,47 @@ async function buscarSolicitudesPorRut(rut) {
         const busquedaDiv = document.getElementById('fichaBusqueda');
         
         if (data.success && data.data.length > 0) {
+            // Identificar solicitud activa
+            const solicitudes = data.data;
+            const solicitudActiva = identificarSolicitudActiva(solicitudes);
+            
+            // Ordenar: activa primero, luego las demás por fecha
+            solicitudes.sort((a, b) => {
+                if (a.id === solicitudActiva?.id) return -1;
+                if (b.id === solicitudActiva?.id) return 1;
+                
+                const fa = new Date(a.fecha_ingreso_solicitud || a.fecha_registro || 0);
+                const fb = new Date(b.fecha_ingreso_solicitud || b.fecha_registro || 0);
+                return fb - fa;
+            });
+            
             // Mostrar resultados
             busquedaDiv.style.display = 'block';
-            resultadosDiv.innerHTML = data.data.map(sol => `
-                <div class="ficha-result-item" onclick="descargarPDF(${sol.id})">
-                    <div class="ficha-id">Solicitud #${sol.id}</div>
-                    <div class="ficha-info">
-                        ${sol.nombre_completo} - ${sol.estado_solicitud} - ${formatMoney(sol.monto_total_pagable)}
+            resultadosDiv.innerHTML = solicitudes.map(sol => {
+                const esActiva = sol.id === solicitudActiva?.id;
+                const estadoBadge = getEstadoBadge(sol.estado_solicitud, esActiva);
+                const fechaInfo = getFechaInfo(sol);
+                
+                return `
+                    <div class="ficha-result-item ${esActiva ? 'ficha-activa' : ''}" onclick="descargarPDF(${sol.id})">
+                        <div class="ficha-id">
+                            Solicitud #${sol.id}
+                            ${esActiva ? '<span class="badge-activa">ACTIVA</span>' : ''}
+                        </div>
+                        <div class="ficha-info">
+                            ${sol.nombre_completo} - ${estadoBadge} - ${formatMoney(sol.monto_total_pagable)}
+                        </div>
+                        <div class="ficha-detalle">
+                            ${fechaInfo}
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             
-            showToast(`Se encontraron ${data.data.length} solicitudes para este RUT`, 'success');
+            const mensaje = solicitudActiva 
+                ? `Se encontraron ${solicitudes.length} solicitudes. La #${solicitudActiva.id} es la ACTIVA`
+                : `Se encontraron ${solicitudes.length} solicitudes. Sin solicitud activa`;
+            showToast(mensaje, solicitudActiva ? 'success' : 'warning');
         } else {
             // No se encontraron solicitudes
             busquedaDiv.style.display = 'block';
@@ -707,6 +736,64 @@ async function buscarSolicitudesPorRut(rut) {
         showToast('Error al buscar solicitudes', 'error');
         console.error(error);
     }
+}
+
+function identificarSolicitudActiva(solicitudes) {
+    // Lógica para identificar la solicitud activa actual
+    
+    // 1. Buscar solicitudes "Aprobada" o "Pagada" más recientes
+    const aprobadasPagadas = solicitudes.filter(s => 
+        s.estado_solicitud === 'Aprobada' || s.estado_solicitud === 'Pagada'
+    );
+    
+    if (aprobadasPagadas.length > 0) {
+        // Ordenar por fecha de ingreso más reciente
+        aprobadasPagadas.sort((a, b) => {
+            const fa = new Date(a.fecha_ingreso_solicitud || a.fecha_registro || 0);
+            const fb = new Date(b.fecha_ingreso_solicitud || b.fecha_registro || 0);
+            return fb - fa;
+        });
+        
+        // La más reciente es la activa
+        return aprobadasPagadas[0];
+    }
+    
+    // 2. Si no hay aprobadas, buscar "En Revisión"
+    const enRevision = solicitudes.filter(s => s.estado_solicitud === 'En Revisión');
+    if (enRevision.length > 0) {
+        return enRevision[0]; // La primera en revisión
+    }
+    
+    // 3. Si no hay ninguna en proceso, retornar null
+    return null;
+}
+
+function getEstadoBadge(estado, esActiva) {
+    const colores = {
+        'Ingresada': 'ingresada',
+        'En Revisión': 'revision',
+        'Aprobada': 'aprobada',
+        'Pagada': 'pagada',
+        'Rechazada': 'rechazada'
+    };
+    
+    const clase = colores[estado] || 'default';
+    return `<span class="badge badge-${clase} ${esActiva ? 'badge-activa' : ''}">${estado}</span>`;
+}
+
+function getFechaInfo(solicitud) {
+    const fechaIngreso = solicitud.fecha_ingreso_solicitud || solicitud.fecha_registro;
+    const fechaNacimiento = solicitud.fecha_nacimiento;
+    
+    let info = `Ingreso: ${formatDate(fechaIngreso)}`;
+    
+    if (fechaNacimiento) {
+        info += ` | Nacimiento: ${formatDate(fechaNacimiento)}`;
+    } else {
+        info += ' | Embarazo en curso';
+    }
+    
+    return info;
 }
 
 async function enviarFichaPorCorreo(id) {
