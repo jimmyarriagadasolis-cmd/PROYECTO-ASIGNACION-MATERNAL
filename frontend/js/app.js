@@ -788,11 +788,106 @@ function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    const icons = { success: '', error: '', warning: '', info: '' };
+    const icons = { success: '✓', error: '✗', warning: '⚠', info: 'ℹ' };
     toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
     container.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 4000);
+    setTimeout(() => toast.remove(), 4000);
+}
+
+// === FUNCIONES DE SEMBRADO ===
+async function verificarFuncionarios() {
+    try {
+        const response = await authFetch(`${API_URL}/seed/funcionarios/status`);
+        const data = await response.json();
+        if (data.success) {
+            const count = data.data.totalFuncionarios;
+            const countEl = document.getElementById('funcionariosCount');
+            const lastUpdateEl = document.getElementById('funcionariosLastUpdate');
+            
+            if (count > 0) {
+                countEl.innerHTML = `✅ ${count} funcionarios cargados`;
+                countEl.style.color = 'var(--success-600)';
+                lastUpdateEl.textContent = new Date().toLocaleString('es-CL');
+                showToast(`Base de datos tiene ${count} funcionarios`, 'success');
+            } else {
+                countEl.innerHTML = '❌ Sin datos';
+                countEl.style.color = 'var(--danger-600)';
+                lastUpdateEl.textContent = 'Nunca';
+                showToast('No hay funcionarios cargados', 'warning');
+            }
+        }
+    } catch (error) {
+        showToast('Error al verificar estado', 'error');
+        console.error(error);
+    }
+}
+
+async function cargarFuncionarios() {
+    const btn = document.getElementById('btnCargarFuncionarios');
+    const progressDiv = document.getElementById('seedProgress');
+    const progressFill = document.getElementById('progressFill');
+    const seedLog = document.getElementById('seedLog');
+    
+    if (!confirm('⚠️ ¿Estás seguro de cargar los 1276 funcionarios desde Funcionarios.xlsx?\n\nEsta operación puede tardar varios minutos y sobreescribirá datos existentes.')) {
+        return;
+    }
+    
+    try {
+        // Deshabilitar botón y mostrar progreso
+        btn.disabled = true;
+        btn.textContent = '⏳ Cargando...';
+        progressDiv.style.display = 'block';
+        progressFill.style.width = '10%';
+        seedLog.textContent = '🚀 Iniciando sembrado de funcionarios...\n';
+        
+        // Simular progreso mientras espera respuesta
+        let progressInterval = setInterval(() => {
+            const current = parseInt(progressFill.style.width) || 10;
+            if (current < 90) {
+                progressFill.style.width = (current + 5) + '%';
+                seedLog.textContent += `Procesando... ${current + 5}%\n`;
+            }
+        }, 2000);
+        
+        const response = await authFetch(`${API_URL}/seed/funcionarios`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        clearInterval(progressInterval);
+        const data = await response.json();
+        
+        if (data.success) {
+            progressFill.style.width = '100%';
+            seedLog.textContent += `✅ ${data.message}\n`;
+            seedLog.textContent += `📊 Total procesado: ${data.data.totalProcessed}\n`;
+            seedLog.textContent += `✅ Escritos: ${data.data.totalWritten}\n`;
+            seedLog.textContent += `❌ Errores: ${data.data.errors}\n`;
+            
+            if (data.data.errors > 0 && data.data.errors.length > 0) {
+                seedLog.textContent += '\n⚠️ Primeros errores:\n';
+                data.data.errors.forEach(err => {
+                    seedLog.textContent += `- ${err.nombre} (${err.rut}): ${err.error}\n`;
+                });
+            }
+            
+            showToast(`¡Sembrado completado! ${data.data.totalWritten} funcionarios cargados`, 'success');
+            
+            // Actualizar estado
+            setTimeout(() => {
+                verificarFuncionarios();
+                progressDiv.style.display = 'none';
+            }, 3000);
+        } else {
+            seedLog.textContent += `❌ Error: ${data.error}\n`;
+            showToast(data.error, 'error');
+        }
+    } catch (error) {
+        seedLog.textContent += `❌ Error de conexión: ${error.message}\n`;
+        showToast('Error al cargar funcionarios', 'error');
+        console.error(error);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 Cargar Funcionarios desde Excel';
+    }
 }
