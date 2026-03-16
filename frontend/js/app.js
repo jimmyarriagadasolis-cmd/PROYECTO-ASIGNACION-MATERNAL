@@ -460,26 +460,67 @@ async function handleSubmitSolicitud(e) {
     }
 }
 
-// === DASHBOARD, LISTADO, MODALES, REPORTES, ETC. ===
 // (Estas funciones no necesitan cambios significativos, ya que usan `authFetch`)
 
 async function loadDashboard() {
     try {
+        // Cargar estadísticas principales
         const response = await authFetch(`${API_URL}/solicitudes/estadisticas`);
         const data = await response.json();
         if (data.success) {
             const stats = data.data;
-            document.getElementById('totalSolicitudes').textContent = stats.totales.total_solicitudes || 0;
-            document.getElementById('montoTotal').textContent = formatMoney(stats.totales.monto_total_acumulado || 0);
-            const aprobadas = stats.porEstado.find(e => e.estado_solicitud === 'Aprobada');
-            document.getElementById('solicitudesAprobadas').textContent = aprobadas?.cantidad || 0;
+            
+            // Actualizar métricas principales
+            document.getElementById('totalSolicitudes').textContent = stats.totales.total_solicitudes;
+            document.getElementById('montoTotal').textContent = formatMoney(stats.totales.monto_total_acumulado);
+            document.getElementById('solicitudesAprobadas').textContent = stats.porEstado.find(e => e.estado_solicitud === 'Aprobada')?.cantidad || 0;
             const pendientes = stats.porEstado.filter(e => e.estado_solicitud === 'Ingresada' || e.estado_solicitud === 'En Revisión');
             document.getElementById('solicitudesPendientes').textContent = pendientes.reduce((sum, p) => sum + p.cantidad, 0);
+            
+            // Cargar solicitudes recientes para la tabla
+            await loadRecentSolicitudes();
+            
+            // Cargar actividad reciente
+            await loadActividadReciente();
+            
+            // Mantener gráficos existentes
             renderChartEstados(stats.porEstado);
             renderChartDepartamentos(stats.porDepartamento);
-            loadActividadReciente();
         }
-    } catch (error) { console.error('Error al cargar dashboard:', error); }
+    } catch (error) { 
+        console.error('Error al cargar dashboard:', error);
+        showToast('Error al cargar datos del dashboard', 'error');
+    }
+}
+
+async function loadRecentSolicitudes() {
+    try {
+        const response = await authFetch(`${API_URL}/solicitudes?limit=5`);
+        const data = await response.json();
+        if (data.success) {
+            const container = document.getElementById('recentSolicitudesTable');
+            container.innerHTML = data.data.map(sol => {
+                const estadoClass = sol.estado_solicitud === 'Aprobada' ? 'aprobada' : 
+                                   sol.estado_solicitud === 'En Revisión' ? 'revision' : 'ingresada';
+                const estadoText = sol.estado_solicitud;
+                
+                return `
+                    <div class="table-row">
+                        <div class="table-cell-id">#${sol.id}</div>
+                        <div class="table-cell-name">${sol.nombre_completo}</div>
+                        <div class="table-cell-dept">${sol.departamento_unidad}</div>
+                        <div class="table-cell-amount">${formatMoney(sol.monto_total_pagable)}</div>
+                        <div class="status-badge ${estadoClass}">${estadoText}</div>
+                        <div class="table-actions">
+                            <span class="action-icon" onclick="verDetalle(${sol.id})">👁️</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    } catch (error) {
+        console.error('Error al cargar solicitudes recientes:', error);
+    }
 }
 
 function renderChartEstados(porEstado) {
@@ -514,13 +555,36 @@ async function loadActividadReciente() {
         const data = await response.json();
         if (data.success) {
             const container = document.getElementById('actividadReciente');
-            container.innerHTML = data.data.slice(0, 5).map(sol => `
-                <div class="activity-item" style="display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border-color);">
-                    <div><strong>${sol.nombre_completo}</strong><span style="color: var(--text-muted); margin-left: 8px;">${sol.departamento_unidad}</span></div>
-                    <div><span class="badge badge-${getEstadoClass(sol.estado_solicitud)}">${sol.estado_solicitud}</span><span style="color: var(--text-muted); margin-left: 8px;">${formatMoney(sol.monto_total_pagable)}</span></div>
-                </div>`).join('');
+            container.innerHTML = data.data.slice(0, 5).map(sol => {
+                const fechaRegistro = sol.fecha_registro ? new Date(sol.fecha_registro._seconds * 1000) : new Date();
+                const ahora = new Date();
+                const diffMs = ahora - fechaRegistro;
+                const diffMins = Math.floor(diffMs / (1000 * 60));
+                
+                let tiempoTexto;
+                if (diffMins < 60) {
+                    tiempoTexto = `Hace ${diffMins} minutos`;
+                } else if (diffMins < 1440) {
+                    tiempoTexto = `Hace ${Math.floor(diffMins / 60)} horas`;
+                } else {
+                    tiempoTexto = `Hace ${Math.floor(diffMins / 1440)} días`;
+                }
+                
+                return `
+                    <div class="activity-item">
+                        <div class="activity-text">${sol.nombre_completo} ${sol.estado_solicitud === 'Aprobada' ? 'aprobó' : sol.estado_solicitud === 'Ingresada' ? 'ingresó' : sol.estado_solicitud === 'En Revisión' ? 'actualizó' : 'rechazó'} solicitud #${sol.id}</div>
+                        <div class="activity-time">${tiempoTexto}</div>
+                    </div>
+                `;
+            }).join('');
         }
-    } catch (error) { console.error('Error al cargar actividad:', error); }
+    } catch (error) { 
+        console.error('Error al cargar actividad reciente:', error);
+        const container = document.getElementById('actividadReciente');
+        if (container) {
+            container.innerHTML = '<div class="activity-item"><div class="activity-text">No hay actividad reciente</div><div class="activity-time">-</div></div>';
+        }
+    }
 }
 
 function getFilterParams() {

@@ -65,39 +65,104 @@
             </div>
         </header>
 
-        <!-- Dashboard Section -->
+        <!-- Dashboard Section Mejorado -->
         <section class="content-section active" id="section-dashboard">
-            <div class="dashboard-grid">
-                <div class="stat-card primary">
-                    <div class="stat-icon">📝</div>
-                    <div class="stat-info">
-                        <h3 id="totalSolicitudes">0</h3>
-                        <p>Total Solicitudes</p>
+            <!-- Métricas Principales Mejoradas -->
+            <div class="metrics-row">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon trending-up"></div>
+                        <div class="metric-info">
+                            <h3 id="totalSolicitudes">0</h3>
+                            <p>Total Solicitudes</p>
+                        </div>
+                    </div>
+                    <div class="metric-change positive">+12% vs mes anterior</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon trending-up"></div>
+                        <div class="metric-info">
+                            <h3 id="montoTotal">$0</h3>
+                            <p>Monto Total Asignado</p>
+                        </div>
+                    </div>
+                    <div class="metric-change positive">+8% vs mes anterior</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon check-circle"></div>
+                        <div class="metric-info">
+                            <h3 id="solicitudesAprobadas">0</h3>
+                            <p>Solicitudes Aprobadas</p>
+                        </div>
+                    </div>
+                    <div class="metric-change neutral">76.5% tasa de aprobación</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon clock"></div>
+                        <div class="metric-info">
+                            <h3 id="solicitudesPendientes">0</h3>
+                            <p>En Revisión</p>
+                        </div>
+                    </div>
+                    <div class="metric-change negative">-5% vs mes anterior</div>
+                </div>
+            </div>
+
+            <!-- Contenido Principal: Tabla y Panel Lateral -->
+            <div class="dashboard-content">
+                <!-- Tabla de Solicitudes Recientes -->
+                <div class="requests-section">
+                    <div class="section-header">
+                        <h2>Solicitudes Recientes</h2>
+                        <a href="#" class="view-all-link" onclick="showSection('listado')">Ver todas →</a>
+                    </div>
+                    
+                    <div class="requests-table">
+                        <div class="table-header">
+                            <div class="header-cell id-cell">ID</div>
+                            <div class="header-cell name-cell">Nombre</div>
+                            <div class="header-cell dept-cell">Departamento</div>
+                            <div class="header-cell amount-cell">Monto</div>
+                            <div class="header-cell status-cell">Estado</div>
+                            <div class="header-cell actions-cell">Acciones</div>
+                        </div>
+                        <div class="table-body" id="recentSolicitudesTable">
+                            <!-- Las filas se llenarán dinámicamente -->
+                        </div>
                     </div>
                 </div>
-                <div class="stat-card success">
-                    <div class="stat-icon">✅</div>
-                    <div class="stat-info">
-                        <h3 id="solicitudesAprobadas">0</h3>
-                        <p>Aprobadas</p>
+
+                <!-- Panel Lateral -->
+                <div class="side-panel">
+                    <!-- Acciones Rápidas -->
+                    <div class="quick-actions">
+                        <h3>Acciones Rápidas</h3>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary btn-full" onclick="showSection('nueva-solicitud')">
+                                <span class="btn-icon">➕</span>
+                                Nueva Solicitud
+                            </button>
+                            <button class="btn btn-outline btn-full" onclick="exportarExcel()">
+                                <span class="btn-icon">📥</span>
+                                Exportar Excel
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <div class="stat-card warning">
-                    <div class="stat-icon">⏳</div>
-                    <div class="stat-info">
-                        <h3 id="solicitudesPendientes">0</h3>
-                        <p>Pendientes</p>
-                    </div>
-                </div>
-                <div class="stat-card info">
-                    <div class="stat-icon">💰</div>
-                    <div class="stat-info">
-                        <h3 id="montoTotal">$0</h3>
-                        <p>Monto Total</p>
+
+                    <!-- Actividad Reciente -->
+                    <div class="activity-feed">
+                        <h3>Actividad Reciente</h3>
+                        <div class="activity-list" id="actividadReciente">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Gráficos (mantener los existentes) -->
             <div class="dashboard-charts">
                 <div class="chart-card">
                     <h3>Solicitudes por Estado</h3>
@@ -107,11 +172,6 @@
                     <h3>Solicitudes por Departamento</h3>
                     <div class="chart-container" id="chartDepartamentos"></div>
                 </div>
-            </div>
-
-            <div class="recent-activity">
-                <h3>Actividad Reciente</h3>
-                <div class="activity-list" id="actividadReciente"></div>
             </div>
         </section>
 
