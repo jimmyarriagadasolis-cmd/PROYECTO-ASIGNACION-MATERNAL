@@ -654,8 +654,59 @@ async function descargarPDF(id) {
 }
 
 function generarFichaIndividual() {
-    const id = document.getElementById('inputIdFicha').value;
-    if (id) descargarPDF(id); else showToast('Ingrese el ID de la solicitud', 'warning');
+    const input = document.getElementById('inputIdFicha').value.trim();
+    if (!input) {
+        showToast('Ingrese ID de solicitud o RUT', 'warning');
+        return;
+    }
+
+    // Determinar si es ID numérico o RUT
+    const isNumeric = /^\d+$/.test(input);
+    
+    if (isNumeric) {
+        // Es ID de solicitud - generar directamente
+        descargarPDF(input);
+    } else {
+        // Es RUT - buscar solicitudes de esta funcionaria
+        buscarSolicitudesPorRut(input);
+    }
+}
+
+async function buscarSolicitudesPorRut(rut) {
+    try {
+        // Normalizar RUT
+        const rutNormalizado = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+        
+        // Buscar solicitudes por RUT
+        const response = await authFetch(`${API_URL}/solicitudes?rut=${encodeURIComponent(rutNormalizado)}`);
+        const data = await response.json();
+        
+        const resultadosDiv = document.getElementById('fichaResultados');
+        const busquedaDiv = document.getElementById('fichaBusqueda');
+        
+        if (data.success && data.data.length > 0) {
+            // Mostrar resultados
+            busquedaDiv.style.display = 'block';
+            resultadosDiv.innerHTML = data.data.map(sol => `
+                <div class="ficha-result-item" onclick="descargarPDF(${sol.id})">
+                    <div class="ficha-id">Solicitud #${sol.id}</div>
+                    <div class="ficha-info">
+                        ${sol.nombre_completo} - ${sol.estado_solicitud} - ${formatMoney(sol.monto_total_pagable)}
+                    </div>
+                </div>
+            `).join('');
+            
+            showToast(`Se encontraron ${data.data.length} solicitudes para este RUT`, 'success');
+        } else {
+            // No se encontraron solicitudes
+            busquedaDiv.style.display = 'block';
+            resultadosDiv.innerHTML = '<p style="color: var(--warning-600);">No se encontraron solicitudes para este RUT</p>';
+            showToast('No se encontraron solicitudes para este RUT', 'warning');
+        }
+    } catch (error) {
+        showToast('Error al buscar solicitudes', 'error');
+        console.error(error);
+    }
 }
 
 async function enviarFichaPorCorreo(id) {

@@ -1401,3 +1401,50 @@ body {
     white-space: pre-wrap;
     margin: 8px 0;
 }
+
+/* Ficha Search Styles */
+.ficha-busqueda {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--gray-50, #f9fafb);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+}
+
+.ficha-busqueda p {
+    margin: 0 0 8px 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary, #1a202c);
+}
+
+#fichaResultados {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ficha-result-item {
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ficha-result-item:hover {
+    background: var(--primary-50, #ebf8ff);
+    border-color: var(--primary-300, #63b3ed);
+}
+
+.ficha-result-item .ficha-id {
+    font-weight: 600;
+    color: var(--primary-600, #3182ce);
+}
+
+.ficha-result-item .ficha-info {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #4a5568);
+    margin-top: 2px;
+}

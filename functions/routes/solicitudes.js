@@ -19,23 +19,40 @@ function normalizeDepartamento(value) {
 // ... (Las rutas GET que no usan el cálculo no necesitan cambios)
 router.get('/', async (req, res) => {
     try {
-        const { estado, departamento, fechaDesde, fechaHasta, tramo, limit } = req.query;
+        const { estado, departamento, fechaDesde, fechaHasta, tramo, limit, rut, busqueda } = req.query;
         let query = db.collection('Solicitudes_Asignacion_Maternal');
         // Apply equality filters only (no orderBy to avoid composite index requirement)
         if (estado) query = query.where('estado_solicitud', '==', estado);
         if (departamento) query = query.where('departamento_unidad', '==', departamento);
         if (tramo) query = query.where('tramo_asignacion', '==', parseInt(tramo));
+        if (rut) {
+            // Normalizar RUT para búsqueda
+            const rutNormalizado = rut.replace(/[^0-9kK]/g, '').toUpperCase();
+            query = query.where('rut_funcionaria', '==', rutNormalizado);
+        }
         const snapshot = await query.get();
         let solicitudes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        // Apply text search filter in memory (for nombre)
+        if (busqueda) {
+            const busquedaLower = busqueda.toLowerCase();
+            solicitudes = solicitudes.filter(s => 
+                (s.nombre_completo && s.nombre_completo.toLowerCase().includes(busquedaLower)) ||
+                (s.rut_funcionaria && s.rut_funcionaria.toLowerCase().includes(busqueda.toLowerCase().replace(/[^0-9kK]/g, '')))
+            );
+        }
+        
         // Apply date range filters in memory
         if (fechaDesde) solicitudes = solicitudes.filter(s => s.fecha_ingreso_solicitud >= fechaDesde);
         if (fechaHasta) solicitudes = solicitudes.filter(s => s.fecha_ingreso_solicitud <= fechaHasta);
+        
         // Sort in memory by fecha_registro descending
         solicitudes.sort((a, b) => {
             const fa = a.fecha_registro?._seconds || a.fecha_registro?.seconds || 0;
             const fb = b.fecha_registro?._seconds || b.fecha_registro?.seconds || 0;
             return fb - fa;
         });
+        
         if (limit) solicitudes = solicitudes.slice(0, parseInt(limit));
         res.json({ success: true, data: solicitudes, total: solicitudes.length });
     } catch (error) {

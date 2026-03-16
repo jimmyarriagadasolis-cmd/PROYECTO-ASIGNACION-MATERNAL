@@ -320,10 +320,14 @@
                 <div class="reporte-card">
                     <div class="reporte-icon">📄</div>
                     <h3>Ficha Individual</h3>
-                    <p>Genera la ficha PDF de una funcionaria específica</p>
+                    <p>Genera la ficha PDF por ID de solicitud o RUT de funcionaria</p>
                     <div class="reporte-actions">
-                        <input type="number" id="inputIdFicha" placeholder="ID Solicitud" class="input-small">
+                        <input type="text" id="inputIdFicha" placeholder="ID Solicitud o RUT (ej: 123 o 12.345.678-9)" class="input-small">
                         <button class="btn btn-primary" id="btnGenerarFicha">Generar PDF</button>
+                    </div>
+                    <div class="ficha-busqueda" id="fichaBusqueda" style="display:none;">
+                        <p><strong>Resultados:</strong></p>
+                        <div id="fichaResultados"></div>
                     </div>
                 </div>
 
