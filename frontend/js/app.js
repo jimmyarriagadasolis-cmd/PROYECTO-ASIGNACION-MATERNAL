@@ -259,6 +259,8 @@ function initForms() {
     document.getElementById('btnEnviarJefatura').addEventListener('click', enviarReporteJefatura);
     document.getElementById('formTramos').addEventListener('submit', guardarTramos);
     document.getElementById('formSMTP').addEventListener('submit', guardarSMTP);
+    document.getElementById('btnCargarFuncionarios').addEventListener('click', cargarFuncionarios);
+    document.getElementById('btnVerificarFuncionarios').addEventListener('click', verificarFuncionarios);
 }
 
 function formatRutInput(e) {
@@ -711,6 +713,9 @@ async function loadConfiguracion() {
         } else {
             smtpStatus.innerHTML = '<p style="color: var(--warning-600);">⚠️ SMTP no configurado</p>';
         }
+        
+        // Verificar estado de funcionarios
+        verificarFuncionarios();
     } catch (error) { console.error('Error al cargar config:', error); }
 }
 
@@ -783,7 +788,7 @@ function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    const icons = { success: '✓', error: '✗', warning: '⚠', info: 'ℹ' };
+    const icons = { success: '', error: '', warning: '', info: '' };
     toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
     container.appendChild(toast);
     setTimeout(() => {

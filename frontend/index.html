@@ -440,6 +440,35 @@
 
                     <div class="smtp-status" id="smtpStatus"></div>
                 </div>
+
+                <div class="config-card">
+                    <h3>📊 Cargar Base de Datos de Funcionarios</h3>
+                    <p class="config-description">Importa los 1276 funcionarios desde Funcionarios.xlsx a Firestore</p>
+                    
+                    <div class="funcionarios-status" id="funcionariosStatus">
+                        <div id="funcionariosInfo">
+                            <p><strong>Estado:</strong> <span id="funcionariosCount">Verificando...</span></p>
+                            <p><strong>Última actualización:</strong> <span id="funcionariosLastUpdate">Nunca</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="config-actions">
+                        <button type="button" class="btn btn-warning" id="btnCargarFuncionarios">
+                            🚀 Cargar Funcionarios desde Excel
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="btnVerificarFuncionarios">
+                            🔄 Verificar Estado
+                        </button>
+                    </div>
+                    
+                    <div class="seed-progress" id="seedProgress" style="display:none;">
+                        <h4>⏳ Progreso del sembrado...</h4>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <p id="seedLog"></p>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
