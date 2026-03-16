@@ -30,11 +30,14 @@ try {
     console.log('  ✅ reportes cargado');
     const configRoutes = require('./routes/config');
     console.log('  ✅ config cargado');
+    const funcionariosRoutes = require('./routes/funcionarios');
+    console.log('  ✅ funcionarios cargado');
 
     app.use('/api/solicitudes', solicitudesRoutes);
     app.use('/api/usuarios', usuariosRoutes);
     app.use('/api/reportes', reportesRoutes);
     app.use('/api/config', configRoutes);
+    app.use('/api/funcionarios', funcionariosRoutes);
     console.log("✅ Todas las rutas configuradas.");
 } catch (err) {
     console.error('❌ ERROR al cargar rutas:', err.message);

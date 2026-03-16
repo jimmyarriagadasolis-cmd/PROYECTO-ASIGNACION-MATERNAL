@@ -226,6 +226,7 @@ function initForms() {
     document.getElementById('btnCalcularPreview').addEventListener('click', calcularPreview);
     document.getElementById('rut').addEventListener('input', formatRutInput);
     document.getElementById('fechaIngresoSolicitud').valueAsDate = new Date();
+    initAutocompleteFuncionario();
     document.getElementById('btnBuscar').addEventListener('click', loadSolicitudes);
     document.getElementById('filtroEstado').addEventListener('change', loadSolicitudes);
     document.getElementById('btnExportarExcel').addEventListener('click', async () => {
@@ -269,6 +270,104 @@ function formatRutInput(e) {
         value = body + '-' + dv;
     }
     e.target.value = value;
+}
+
+// === AUTOCOMPLETE FUNCIONARIOS ===
+let acTimeout = null;
+let acActiveIndex = -1;
+
+function initAutocompleteFuncionario() {
+    const input = document.getElementById('buscarFuncionario');
+    const dropdown = document.getElementById('autocompleteResults');
+    if (!input || !dropdown) return;
+
+    input.addEventListener('input', () => {
+        clearTimeout(acTimeout);
+        const q = input.value.trim();
+        if (q.length < 2) { dropdown.style.display = 'none'; return; }
+        acTimeout = setTimeout(() => buscarFuncionarios(q), 300);
+    });
+
+    input.addEventListener('keydown', (e) => {
+        const items = dropdown.querySelectorAll('.autocomplete-item');
+        if (!items.length || dropdown.style.display === 'none') return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            acActiveIndex = Math.min(acActiveIndex + 1, items.length - 1);
+            items.forEach((it, i) => it.classList.toggle('active', i === acActiveIndex));
+            items[acActiveIndex]?.scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            acActiveIndex = Math.max(acActiveIndex - 1, 0);
+            items.forEach((it, i) => it.classList.toggle('active', i === acActiveIndex));
+            items[acActiveIndex]?.scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (acActiveIndex >= 0 && items[acActiveIndex]) items[acActiveIndex].click();
+        } else if (e.key === 'Escape') {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#buscarFuncionario') && !e.target.closest('#autocompleteResults')) {
+            dropdown.style.display = 'none';
+        }
+    });
+}
+
+async function buscarFuncionarios(query) {
+    const dropdown = document.getElementById('autocompleteResults');
+    try {
+        const response = await authFetch(`${API_URL}/funcionarios/buscar?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        acActiveIndex = -1;
+        if (data.success && data.data.length > 0) {
+            dropdown.innerHTML = data.data.map(f => `
+                <div class="autocomplete-item" onclick='seleccionarFuncionario(${JSON.stringify(f).replace(/'/g, "&#39;")})'>
+                    <span class="ac-name">${f.nombre_completo}</span>
+                    <div class="ac-details">
+                        <span class="ac-rut">${f.rut}</span>
+                        <span>${f.area || ''}</span>
+                        <span>${f.cargo || ''}</span>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            dropdown.innerHTML = '<div class="autocomplete-no-results">No se encontraron funcionarios</div>';
+        }
+        dropdown.style.display = 'block';
+    } catch (error) {
+        console.error('Error buscando funcionarios:', error);
+        dropdown.style.display = 'none';
+    }
+}
+
+function seleccionarFuncionario(f) {
+    document.getElementById('buscarFuncionario').value = `${f.nombre_completo} - ${f.rut}`;
+    document.getElementById('autocompleteResults').style.display = 'none';
+
+    // Autocomplete form fields
+    document.getElementById('rut').value = f.rut || '';
+    document.getElementById('nombre').value = f.nombre_completo || '';
+    document.getElementById('departamento').value = f.area || '';
+
+    // Show additional info card
+    const infoDiv = document.getElementById('infoFuncionario');
+    const detalleDiv = document.getElementById('funcionarioDetalle');
+    if (infoDiv && detalleDiv) {
+        detalleDiv.innerHTML = `
+            <span><strong>Cargo:</strong> ${f.cargo || 'N/A'}</span>
+            <span><strong>Grado:</strong> ${f.grado || 'N/A'}</span>
+            <span><strong>Calidad:</strong> ${f.calidad_juridica || 'N/A'}</span>
+            <span><strong>Tipo:</strong> ${f.tipo_funcionario || 'N/A'}</span>
+            <span><strong>Cargas:</strong> ${f.num_cargas ?? 'N/A'}</span>
+            <span><strong>Genero:</strong> ${f.genero === 'F' ? 'Femenino' : f.genero === 'M' ? 'Masculino' : f.genero || 'N/A'}</span>
+        `;
+        infoDiv.style.display = 'block';
+    }
+
+    showToast(`Funcionario/a ${f.nombre_completo} seleccionado/a`, 'success');
 }
 
 async function calcularPreview() {
