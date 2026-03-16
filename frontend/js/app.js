@@ -504,15 +504,25 @@ async function loadRecentSolicitudes() {
                                    sol.estado_solicitud === 'En Revisión' ? 'revision' : 'ingresada';
                 const estadoText = sol.estado_solicitud;
                 
+                // Manejar tanto IDs numéricos como UUIDs
+                let displayId;
+                if (typeof sol.id === 'number') {
+                    displayId = `#${sol.id}`;
+                } else if (typeof sol.id === 'string') {
+                    displayId = sol.id.length > 8 ? `${sol.id.substring(0, 8)}...` : sol.id;
+                } else {
+                    displayId = 'N/A';
+                }
+                
                 return `
                     <div class="table-row">
-                        <div class="table-cell-id">#${sol.id}</div>
+                        <div class="table-cell-id">${displayId}</div>
                         <div class="table-cell-name">${sol.nombre_completo}</div>
                         <div class="table-cell-dept">${sol.departamento_unidad}</div>
                         <div class="table-cell-amount">${formatMoney(sol.monto_total_pagable)}</div>
                         <div class="status-badge ${estadoClass}">${estadoText}</div>
                         <div class="table-actions">
-                            <span class="action-icon" onclick="verDetalle(${sol.id})">👁️</span>
+                            <span class="action-icon" onclick="verDetalle('${sol.id}')">👁️</span>
                         </div>
                     </div>
                 `;
@@ -570,9 +580,19 @@ async function loadActividadReciente() {
                     tiempoTexto = `Hace ${Math.floor(diffMins / 1440)} días`;
                 }
                 
+                // Manejar tanto IDs numéricos como UUIDs
+                let displayId;
+                if (typeof sol.id === 'number') {
+                    displayId = `#${sol.id}`;
+                } else if (typeof sol.id === 'string') {
+                    displayId = sol.id.length > 8 ? `${sol.id.substring(0, 8)}...` : sol.id;
+                } else {
+                    displayId = 'N/A';
+                }
+                
                 return `
                     <div class="activity-item">
-                        <div class="activity-text">${sol.nombre_completo} ${sol.estado_solicitud === 'Aprobada' ? 'aprobó' : sol.estado_solicitud === 'Ingresada' ? 'ingresó' : sol.estado_solicitud === 'En Revisión' ? 'actualizó' : 'rechazó'} solicitud #${sol.id}</div>
+                        <div class="activity-text">${sol.nombre_completo} ${sol.estado_solicitud === 'Aprobada' ? 'aprobó' : sol.estado_solicitud === 'Ingresada' ? 'ingresó' : sol.estado_solicitud === 'En Revisión' ? 'actualizó' : 'rechazó'} solicitud ${displayId}</div>
                         <div class="activity-time">${tiempoTexto}</div>
                     </div>
                 `;
@@ -613,9 +633,20 @@ function renderSolicitudes(solicitudes) {
         tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">No hay solicitudes registradas</td></tr>';
         return;
     }
-    tbody.innerHTML = solicitudes.map(sol => `
+    tbody.innerHTML = solicitudes.map(sol => {
+        // Manejar tanto IDs numéricos como UUIDs
+        let displayId;
+        if (typeof sol.id === 'number') {
+            displayId = `#${sol.id}`;
+        } else if (typeof sol.id === 'string') {
+            displayId = sol.id.length > 8 ? `${sol.id.substring(0, 8)}...` : sol.id;
+        } else {
+            displayId = 'N/A';
+        }
+        
+        return `
         <tr>
-            <td>${sol.id.substring(0, 8)}...</td><td>${sol.rut_funcionaria}</td><td>${sol.nombre_completo}</td>
+            <td>${displayId}</td><td>${sol.rut_funcionaria}</td><td>${sol.nombre_completo}</td>
             <td>${sol.departamento_unidad}</td><td>Tramo ${sol.tramo_asignacion}</td><td>${formatMoney(sol.monto_total_pagable)}</td>
             <td><span class="badge badge-${getEstadoClass(sol.estado_solicitud)}">${sol.estado_solicitud}</span></td>
             <td>${formatDate(sol.fecha_ingreso_solicitud)}</td>
@@ -623,7 +654,8 @@ function renderSolicitudes(solicitudes) {
                 <button class="btn-icon view" onclick="verDetalle('${sol.id}')" title="Ver detalle">👁️</button>
                 <button class="btn-icon edit" onclick="descargarPDF('${sol.id}')" title="Descargar PDF">📄</button>
             </td>
-        </tr>`).join('');
+        </tr>`;
+    }).join('');
 }
 
 function getEstadoClass(estado) {
