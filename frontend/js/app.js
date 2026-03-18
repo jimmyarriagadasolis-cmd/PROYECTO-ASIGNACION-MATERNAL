@@ -712,15 +712,29 @@ function initModals() {
 }
 
 async function verDetalle(id) {
+    console.log('🔍 verDetalle llamado con ID:', id);
     try {
         const response = await authFetch(`${API_URL}/solicitudes/${id}`);
         const data = await response.json();
+        console.log('📊 Respuesta de verDetalle:', data);
         if (data.success) {
             state.solicitudActual = data.data;
             renderDetalle(data.data);
-            document.getElementById('modalDetalle').classList.add('active');
+            const modal = document.getElementById('modalDetalle');
+            if (modal) {
+                modal.classList.add('active');
+                console.log('✅ Modal abierto');
+            } else {
+                console.error('❌ Modal no encontrado');
+            }
+        } else {
+            console.error('❌ Error en respuesta:', data.error);
+            showToast(data.error || 'Error al cargar detalle', 'error');
         }
-    } catch (error) { showToast('Error al cargar detalle', 'error'); }
+    } catch (error) { 
+        console.error('❌ Error en verDetalle:', error);
+        showToast('Error al cargar detalle', 'error'); 
+    }
 }
 
 function renderDetalle(sol) {
@@ -754,10 +768,13 @@ async function cambiarEstado(id, estado, motivo = null) {
 }
 
 async function descargarPDF(id) {
+    console.log('📄 descargarPDF llamado con ID:', id);
     try {
         const response = await authFetch(`${API_URL}/reportes/ficha/${id}`);
+        console.log('📊 Respuesta de descargarPDF:', response.status);
         if (response.ok) {
             const blob = await response.blob();
+            console.log('📦 Blob creado, tamaño:', blob.size);
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -766,10 +783,16 @@ async function descargarPDF(id) {
             a.click();
             a.remove();
             window.URL.revokeObjectURL(url);
+            console.log('✅ PDF descargado');
+            showToast('PDF descargado exitosamente', 'success');
         } else {
+            console.error('❌ Error en respuesta:', response.status);
             showToast('Error al descargar PDF', 'error');
         }
-    } catch (error) { showToast('Error al descargar PDF', 'error'); console.error(error); }
+    } catch (error) { 
+        console.error('❌ Error en descargarPDF:', error);
+        showToast('Error al descargar PDF', 'error'); 
+    }
 }
 
 function generarFichaIndividual() {
