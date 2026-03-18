@@ -81,7 +81,7 @@ function generarFichaIndividualPDF(solicitud, outputPath, usuario = null) {
                     .text(titulo, 50, y);
                 y += 8; // Más espacio después del título
                 doc.moveTo(50, y).lineTo(250, y).stroke(azulClaro);
-                y += 12; // Más espacio después de la línea
+                y += 18; // Mucho más espacio después de la línea
             };
 
             // Función helper para campos
@@ -104,7 +104,7 @@ function generarFichaIndividualPDF(solicitud, outputPath, usuario = null) {
             campo('Correo Institucional', solicitud.correo_electronico);
             campo('Teléfono', solicitud.telefono || 'No registrado');
 
-            y += 15; // Más espacio entre secciones
+            y += 20; // Aún más espacio entre secciones
 
             // Período de Embarazo
             seccion('PERÍODO DE EMBARAZO');
@@ -112,7 +112,7 @@ function generarFichaIndividualPDF(solicitud, outputPath, usuario = null) {
             campo('Fecha Nacimiento', solicitud.fecha_nacimiento ? formatearFecha(solicitud.fecha_nacimiento) : 'Aún en embarazo');
             campo('Fecha Ingreso Solicitud', formatearFecha(solicitud.fecha_ingreso_solicitud));
 
-            y += 15; // Más espacio entre secciones
+            y += 20; // Aún más espacio entre secciones
 
             // Datos Económicos
             seccion('DATOS ECONÓMICOS');
@@ -120,7 +120,7 @@ function generarFichaIndividualPDF(solicitud, outputPath, usuario = null) {
             campo('Tramo de Ingresos', `Tramo ${solicitud.tramo_asignacion}`);
             campo('Monto Mensual Asignación', formatearMoneda(solicitud.monto_mensual_asignacion));
 
-            y += 15; // Más espacio entre secciones
+            y += 20; // Aún más espacio entre secciones
 
             // Cálculo de Retroactividad
             seccion('CÁLCULO DE RETROACTIVIDAD');
@@ -132,7 +132,7 @@ function generarFichaIndividualPDF(solicitud, outputPath, usuario = null) {
                 campo('Monto Futuro Total', formatearMoneda(solicitud.monto_total_futuro));
             }
 
-            y += 15; // Más espacio entre secciones
+            y += 20; // Aún más espacio entre secciones
 
             // Desglose Mensual
             const desglose = typeof solicitud.desglose_mensual === 'string'
@@ -174,7 +174,7 @@ function generarFichaIndividualPDF(solicitud, outputPath, usuario = null) {
                 doc.text(formatearMoneda(solicitud.monto_total_retroactivo + solicitud.monto_total_futuro), colMonto, y);
             }
 
-            y += 25; // Más espacio antes del resumen
+            y += 30; // Mucho más espacio antes del resumen
 
             // Resumen Financiero
             if (y > 600) {
@@ -212,7 +212,7 @@ function generarFichaIndividualPDF(solicitud, outputPath, usuario = null) {
                 campo('Observaciones', solicitud.observaciones);
             }
 
-            y += 25; // Más espacio antes de datos del funcionario
+            y += 30; // Mucho más espacio antes de datos del funcionario
 
             // Datos del funcionario que generó el documento
             if (usuario) {
