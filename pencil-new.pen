@@ -1,0 +1,1039 @@
+{
+  "version": "2.8",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": 0,
+      "y": 0,
+      "name": "Frame",
+      "clip": true,
+      "width": 800,
+      "height": 600,
+      "fill": "#FFFFFF",
+      "layout": "none"
+    },
+    {
+      "type": "frame",
+      "id": "dV0pS",
+      "x": 0,
+      "y": 0,
+      "name": "Dashboard Mejorado",
+      "width": 1440,
+      "fill": "#ffffff",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "HUdsM",
+          "name": "header",
+          "width": "fill_container",
+          "height": 64,
+          "fill": "#f8fafc",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "#e2e8f0"
+          },
+          "padding": [
+            0,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "e2EEE",
+              "name": "headerLeft",
+              "height": "fill_container",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "egAMQ",
+                  "name": "logo",
+                  "width": 40,
+                  "height": 40,
+                  "fill": "#3182ce",
+                  "cornerRadius": 8
+                },
+                {
+                  "type": "text",
+                  "id": "jk0ET",
+                  "name": "title",
+                  "fill": "#1a202c",
+                  "content": "Sistema de Asignaciones 1.0",
+                  "fontFamily": "Inter",
+                  "fontSize": 20,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "GImps",
+              "name": "headerRight",
+              "height": "fill_container",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "nayaG",
+                  "name": "notificationBtn",
+                  "width": 24,
+                  "height": 24,
+                  "iconFontName": "bell",
+                  "iconFontFamily": "lucide",
+                  "fill": "#4a5568"
+                },
+                {
+                  "type": "frame",
+                  "id": "cUq3d",
+                  "name": "userAvatar",
+                  "width": 32,
+                  "height": 32,
+                  "fill": "#3182ce",
+                  "cornerRadius": 16
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "nJNEQ",
+          "name": "mainContent",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": 32,
+          "children": [
+            {
+              "type": "frame",
+              "id": "6uEeH",
+              "name": "metricsRow",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ng3IP",
+                  "name": "metric1",
+                  "width": "fill_container",
+                  "fill": "#ffffff",
+                  "cornerRadius": 8,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#e2e8f0"
+                  },
+                  "layout": "vertical",
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QNWu8",
+                      "name": "metric1Label",
+                      "fill": "#718096",
+                      "content": "Total Solicitudes",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "etYqc",
+                      "name": "metric1Value",
+                      "fill": "#1a202c",
+                      "content": "247",
+                      "fontFamily": "Inter",
+                      "fontSize": 32,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "hUaRb",
+                      "name": "metric1Change",
+                      "fill": "#48bb78",
+                      "content": "+12% vs mes anterior",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "O0PQJ",
+                      "name": "metric1Icon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "trending-up",
+                      "iconFontFamily": "lucide",
+                      "fill": "#48bb78"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Ds08l",
+                  "name": "metric2",
+                  "width": "fill_container",
+                  "fill": "#ffffff",
+                  "cornerRadius": 8,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#e2e8f0"
+                  },
+                  "layout": "vertical",
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "gjlux",
+                      "name": "metric2Label",
+                      "fill": "#718096",
+                      "content": "Monto Total Asignado",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "o9El0",
+                      "name": "metric2Value",
+                      "fill": "#1a202c",
+                      "content": "$45.2M",
+                      "fontFamily": "Inter",
+                      "fontSize": 32,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "nv58V",
+                      "name": "metric2Change",
+                      "fill": "#48bb78",
+                      "content": "+8% vs mes anterior",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "U7DrL",
+                      "name": "metric2Icon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "trending-up",
+                      "iconFontFamily": "lucide",
+                      "fill": "#48bb78"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ZpVq9",
+                  "name": "metric3",
+                  "width": "fill_container",
+                  "fill": "#ffffff",
+                  "cornerRadius": 8,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#e2e8f0"
+                  },
+                  "layout": "vertical",
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "VGJzd",
+                      "name": "metric3Label",
+                      "fill": "#718096",
+                      "content": "Solicitudes Aprobadas",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "hpnMy",
+                      "name": "metric3Value",
+                      "fill": "#1a202c",
+                      "content": "189",
+                      "fontFamily": "Inter",
+                      "fontSize": 32,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "g9SBL",
+                      "name": "metric3Change",
+                      "fill": "#4a5568",
+                      "content": "76.5% tasa de aprobación",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "64mqe",
+                      "name": "metric3Icon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "check-circle",
+                      "iconFontFamily": "lucide",
+                      "fill": "#3182ce"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "nwfFm",
+                  "name": "metric4",
+                  "width": "fill_container",
+                  "fill": "#ffffff",
+                  "cornerRadius": 8,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#e2e8f0"
+                  },
+                  "layout": "vertical",
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "6XJ19",
+                      "name": "metric4Label",
+                      "fill": "#718096",
+                      "content": "En Revisión",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "text",
+                      "id": "QXi8j",
+                      "name": "metric4Value",
+                      "fill": "#1a202c",
+                      "content": "58",
+                      "fontFamily": "Inter",
+                      "fontSize": 32,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "i6foF",
+                      "name": "metric4Change",
+                      "fill": "#f56565",
+                      "content": "-5% vs mes anterior",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "CEeIk",
+                      "name": "metric4Icon",
+                      "width": 16,
+                      "height": 16,
+                      "iconFontName": "clock",
+                      "iconFontFamily": "lucide",
+                      "fill": "#f56565"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "rd9Kk",
+              "name": "contentRow",
+              "width": "fill_container",
+              "height": "fit_content(600)",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Zu1vh",
+                  "name": "recentRequests",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "URxR9",
+                      "name": "sectionHeader1",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "BT6z7",
+                          "name": "sectionTitle1",
+                          "fill": "#1a202c",
+                          "content": "Solicitudes Recientes",
+                          "fontFamily": "Inter",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "eYuqi",
+                          "name": "viewAllBtn1",
+                          "fill": "#3182ce",
+                          "content": "Ver todas →",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YkPB4",
+                      "name": "requestsTable",
+                      "width": "fill_container",
+                      "fill": "#ffffff",
+                      "cornerRadius": 8,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#e2e8f0"
+                      },
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "MK4Rb",
+                          "name": "tableHeader",
+                          "width": "fill_container",
+                          "height": 48,
+                          "fill": "#f8fafc",
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": {
+                              "bottom": 1
+                            },
+                            "fill": "#e2e8f0"
+                          },
+                          "padding": [
+                            16,
+                            24
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "59BZH",
+                              "name": "headerId",
+                              "fill": "#4a5568",
+                              "content": "ID",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "wLx1p",
+                              "name": "headerName",
+                              "fill": "#4a5568",
+                              "content": "Nombre",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "rhmpc",
+                              "name": "headerDept",
+                              "fill": "#4a5568",
+                              "content": "Departamento",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "XiYsm",
+                              "name": "headerAmount",
+                              "fill": "#4a5568",
+                              "content": "Monto",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "YuRfR",
+                              "name": "headerStatus",
+                              "fill": "#4a5568",
+                              "content": "Estado",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "fcCUR",
+                              "name": "headerActions",
+                              "fill": "#4a5568",
+                              "content": "Acciones",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "DRexN",
+                          "name": "row1",
+                          "width": "fill_container",
+                          "height": 56,
+                          "padding": [
+                            12,
+                            24
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "zMhok",
+                              "name": "row1Id",
+                              "fill": "#1a202c",
+                              "content": "#42",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "mDRbp",
+                              "name": "row1Name",
+                              "fill": "#1a202c",
+                              "content": "María González",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "IW9C9",
+                              "name": "row1Dept",
+                              "fill": "#4a5568",
+                              "content": "Subsecretaría de las Culturas",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "etng2",
+                              "name": "row1Amount",
+                              "fill": "#1a202c",
+                              "content": "$1,200,000",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "xqhkj",
+                              "name": "row1Status",
+                              "width": 100,
+                              "height": 28,
+                              "fill": "#dcfce7",
+                              "cornerRadius": 14,
+                              "padding": [
+                                4,
+                                12
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "OiSef",
+                                  "fill": "#166534",
+                                  "content": "Aprobada",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "icon_font",
+                              "id": "UhI23",
+                              "name": "row1Actions",
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "eye",
+                              "iconFontFamily": "lucide",
+                              "fill": "#4a5568"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "6ahd9",
+                          "name": "row2",
+                          "width": "fill_container",
+                          "height": 56,
+                          "fill": "#f8fafc",
+                          "padding": [
+                            12,
+                            24
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "yOKuF",
+                              "name": "row2Id",
+                              "fill": "#1a202c",
+                              "content": "#41",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "klMsI",
+                              "name": "row2Name",
+                              "fill": "#1a202c",
+                              "content": "Ana Rodríguez",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "X0El6",
+                              "name": "row2Dept",
+                              "fill": "#4a5568",
+                              "content": "Departamento de Fomento",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Qs6md",
+                              "name": "row2Amount",
+                              "fill": "#1a202c",
+                              "content": "$980,000",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "UUrmX",
+                              "name": "row2Status",
+                              "width": 100,
+                              "height": 28,
+                              "fill": "#fef3c7",
+                              "cornerRadius": 14,
+                              "padding": [
+                                4,
+                                12
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "0v8qu",
+                                  "fill": "#92400e",
+                                  "content": "En Revisión",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "icon_font",
+                              "id": "1EefG",
+                              "name": "row2Actions",
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "eye",
+                              "iconFontFamily": "lucide",
+                              "fill": "#4a5568"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Lpllj",
+                          "name": "row3",
+                          "width": "fill_container",
+                          "height": 56,
+                          "padding": [
+                            12,
+                            24
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "vZyul",
+                              "name": "row3Id",
+                              "fill": "#1a202c",
+                              "content": "#40",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "UeDyr",
+                              "name": "row3Name",
+                              "fill": "#1a202c",
+                              "content": "Carlos Silva",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "KVPnt",
+                              "name": "row3Dept",
+                              "fill": "#4a5568",
+                              "content": "Programa 001 Seremi Los Lagos",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Zinoe",
+                              "name": "row3Amount",
+                              "fill": "#1a202c",
+                              "content": "$1,500,000",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "IxsDU",
+                              "name": "row3Status",
+                              "width": 100,
+                              "height": 28,
+                              "fill": "#fee2e2",
+                              "cornerRadius": 14,
+                              "padding": [
+                                4,
+                                12
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "aIFij",
+                                  "fill": "#991b1b",
+                                  "content": "Ingresada",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "icon_font",
+                              "id": "V4rSh",
+                              "name": "row3Actions",
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "eye",
+                              "iconFontFamily": "lucide",
+                              "fill": "#4a5568"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "4h5ap",
+                  "name": "sidePanel",
+                  "width": 360,
+                  "height": "fill_container",
+                  "layout": "vertical",
+                  "gap": 24,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Zh6GZ",
+                      "name": "quickActions",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "y1I5y",
+                          "name": "sectionHeader2",
+                          "fill": "#1a202c",
+                          "content": "Acciones Rápidas",
+                          "fontFamily": "Inter",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "ZTPoT",
+                          "name": "actionButtons",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "cwdr5",
+                              "name": "newRequestBtn",
+                              "width": "fill_container",
+                              "height": 48,
+                              "fill": "#3182ce",
+                              "cornerRadius": 8,
+                              "padding": 16,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "aMdKV",
+                                  "width": 20,
+                                  "height": 20,
+                                  "iconFontName": "plus",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#ffffff"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Te2e9",
+                                  "fill": "#ffffff",
+                                  "content": "Nueva Solicitud",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "gtNcJ",
+                              "name": "exportBtn",
+                              "width": "fill_container",
+                              "height": 48,
+                              "fill": "#ffffff",
+                              "cornerRadius": 8,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#e2e8f0"
+                              },
+                              "padding": 16,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "rYJoN",
+                                  "width": 20,
+                                  "height": 20,
+                                  "iconFontName": "download",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "#4a5568"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "POPQK",
+                                  "fill": "#4a5568",
+                                  "content": "Exportar Excel",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "5Z4lO",
+                      "name": "activityFeed",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "9fK6L",
+                          "name": "sectionHeader3",
+                          "fill": "#1a202c",
+                          "content": "Actividad Reciente",
+                          "fontFamily": "Inter",
+                          "fontSize": 18,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "g9iQW",
+                          "name": "activityItems",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 12,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "o9tAf",
+                              "name": "activity1",
+                              "width": "fill_container",
+                              "fill": "#f8fafc",
+                              "cornerRadius": 6,
+                              "layout": "vertical",
+                              "padding": 12,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "4LV24",
+                                  "fill": "#1a202c",
+                                  "content": "María González aprobó solicitud #42",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Qw1iG",
+                                  "fill": "#718096",
+                                  "content": "Hace 5 minutos",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "qT9Tp",
+                              "name": "activity2",
+                              "width": "fill_container",
+                              "fill": "#f8fafc",
+                              "cornerRadius": 6,
+                              "layout": "vertical",
+                              "padding": 12,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "MTEhg",
+                                  "fill": "#1a202c",
+                                  "content": "Nueva solicitud de Ana Rodríguez",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "1ssJ4",
+                                  "fill": "#718096",
+                                  "content": "Hace 23 minutos",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "CaHlk",
+                              "name": "activity3",
+                              "width": "fill_container",
+                              "fill": "#f8fafc",
+                              "cornerRadius": 6,
+                              "layout": "vertical",
+                              "padding": 12,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "iNyNf",
+                                  "fill": "#1a202c",
+                                  "content": "Carlos Silva actualizó solicitud #38",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "nucaH",
+                                  "fill": "#718096",
+                                  "content": "Hace 1 hora",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "qUMl5",
+          "name": "footer",
+          "width": "fill_container",
+          "height": 60,
+          "fill": "#f8fafc",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "top": 1
+            },
+            "fill": "#e2e8f0"
+          },
+          "padding": [
+            0,
+            32
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "h3rTk",
+              "fill": "#718096",
+              "content": "© 2024 Ministerio de las Culturas, las Artes y el Patrimonio",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "lTu1x",
+              "fill": "#718096",
+              "content": "Sistema de Asignaciones v1.0",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

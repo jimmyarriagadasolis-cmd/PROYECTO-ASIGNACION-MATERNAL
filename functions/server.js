@@ -32,15 +32,12 @@ try {
     console.log('  ✅ config cargado');
     const funcionariosRoutes = require('./routes/funcionarios');
     console.log('  ✅ funcionarios cargado');
-    const seedRoutes = require('./routes/seed');
-    console.log('  ✅ seed cargado');
 
     app.use('/api/solicitudes', solicitudesRoutes);
     app.use('/api/usuarios', usuariosRoutes);
     app.use('/api/reportes', reportesRoutes);
     app.use('/api/config', configRoutes);
     app.use('/api/funcionarios', funcionariosRoutes);
-    app.use('/api/seed', seedRoutes);
     console.log("✅ Todas las rutas configuradas.");
 } catch (err) {
     console.error('❌ ERROR al cargar rutas:', err.message);
