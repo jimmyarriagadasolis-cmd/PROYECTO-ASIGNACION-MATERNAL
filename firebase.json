@@ -7,16 +7,15 @@
         "public": "frontend",
         "ignore": [
             "firebase.json",
-            "**/.*",
             "**/node_modules/**"
         ],
         "rewrites": [
             {
-                "source": "/assets/**",
+                "source": "/api/**",
                 "function": "api"
             },
             {
-                "source": "/api/**",
+                "source": "/assets/**",
                 "function": "api"
             },
             {
