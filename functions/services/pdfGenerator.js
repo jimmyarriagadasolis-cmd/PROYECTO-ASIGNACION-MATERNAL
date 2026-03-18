@@ -38,40 +38,40 @@ function generarFichaIndividualPDF(solicitud, outputPath, usuario = null) {
             }
             
             if (fs.existsSync(logoPath)) {
-                doc.image(logoPath, 50, 30, { width: 100, height: 100 });
+                doc.image(logoPath, 50, 40, { width: 80, height: 80 });
             }
 
-            // Encabezado mejorado
-            doc.fontSize(16)
+            // Encabezado mejorado - ajustado para no superponerse con el logo
+            doc.fontSize(14)
                 .fillColor(azulOscuro)
                 .font('Helvetica-Bold')
-                .text('MINISTERIO DE LAS CULTURAS, LAS ARTES Y EL', 160, 35, { align: 'left' });
+                .text('MINISTERIO DE LAS CULTURAS, LAS ARTES Y EL', 145, 45, { align: 'left' });
             
-            doc.fontSize(16)
-                .text('PATRIMONIO', 160, 52, { align: 'left' });
+            doc.fontSize(14)
+                .text('PATRIMONIO', 145, 62, { align: 'left' });
 
-            doc.fontSize(10)
+            doc.fontSize(9)
                 .fillColor(gris)
                 .font('Helvetica')
-                .text('Gobierno de Chile', 160, 72);
+                .text('Gobierno de Chile', 145, 80);
 
             // Número de solicitud destacado
-            doc.fontSize(10)
+            doc.fontSize(11)
                 .fillColor(azulClaro)
                 .font('Helvetica-Bold')
-                .text(`Solicitud N° ${solicitud.id_numerico || solicitud.id}`, 450, 35, { align: 'right' });
+                .text(`Solicitud N° ${solicitud.id_numerico || solicitud.id}`, 450, 50, { align: 'right' });
 
             doc.fontSize(14)
                 .fillColor(azulClaro)
                 .font('Helvetica-Bold')
-                .text('CÁLCULO DE ASIGNACIÓN MATERNAL RETROACTIVA', 50, 110, { align: 'center' });
+                .text('CÁLCULO DE ASIGNACIÓN MATERNAL RETROACTIVA', 50, 130, { align: 'center' });
 
             // Línea divisoria más gruesa
             doc.lineWidth(2);
-            doc.moveTo(50, 135).lineTo(562, 135).stroke(azulOscuro);
+            doc.moveTo(50, 155).lineTo(562, 155).stroke(azulOscuro);
             doc.lineWidth(1);
 
-            let y = 140;
+            let y = 170;
 
             // Función helper para secciones
             const seccion = (titulo) => {

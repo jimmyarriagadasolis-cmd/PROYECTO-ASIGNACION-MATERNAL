@@ -656,10 +656,12 @@ function getFilterParams() {
 
 async function loadSolicitudes() {
     try {
-        const response = await authFetch(`${API_URL}/solicitudes?${getFilterParams()}`);
+        // Agregar timestamp para evitar caché
+        const response = await authFetch(`${API_URL}/solicitudes?${getFilterParams()}&_t=${Date.now()}`);
         const data = await response.json();
         if (data.success) {
             state.solicitudes = data.data;
+            console.log('📊 Solicitudes cargadas:', data.data.length, 'primera:', data.data[0]);
             renderSolicitudes(data.data);
         }
     } catch (error) { console.error('Error al cargar solicitudes:', error); }
