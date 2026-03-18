@@ -21,12 +21,15 @@ const { enviarFichaIndividual, enviarReporteConsolidado } = require('../services
 router.get('/ficha/:id', async (req, res) => {
     try {
         const { id } = req.params;
+        console.log('📄 GET /api/reportes/ficha/:id - ID recibido:', id);
         const docRef = db.collection('Solicitudes_Asignacion_Maternal').doc(id);
         const doc = await docRef.get();
 
         if (!doc.exists) {
+            console.log('❌ Solicitud no encontrada para PDF:', id);
             return res.status(404).json({ success: false, error: 'Solicitud no encontrada' });
         }
+        console.log('✅ Solicitud encontrada, generando PDF:', doc.id);
         const solicitud = { id: doc.id, ...doc.data() };
 
         const filename = `Ficha_${solicitud.rut_funcionaria.replace(/\./g, '')}_${Date.now()}.pdf`;
@@ -34,14 +37,15 @@ router.get('/ficha/:id', async (req, res) => {
         const outputPath = path.join(os.tmpdir(), filename);
 
         await generarFichaIndividualPDF(solicitud, outputPath);
+        console.log('✅ PDF generado:', filename);
 
         res.download(outputPath, filename, (err) => {
-            if (err) console.error('Error al descargar:', err);
+            if (err) console.error('❌ Error al descargar:', err);
             // Limpiar el archivo temporal después de la descarga
             fs.unlinkSync(outputPath);
         });
     } catch (error) {
-        console.error('Error al generar ficha PDF:', error);
+        console.error('❌ Error al generar ficha PDF:', error);
         res.status(500).json({ success: false, error: 'Error interno del servidor' });
     }
 });

@@ -110,12 +110,18 @@ router.get('/estadisticas', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
     try {
+        console.log('🔍 GET /api/solicitudes/:id - ID recibido:', req.params.id);
         const docRef = db.collection('Solicitudes_Asignacion_Maternal').doc(req.params.id);
         const doc = await docRef.get();
-        if (!doc.exists) return res.status(404).json({ success: false, error: 'Solicitud no encontrada' });
+        console.log('📄 Documento existe:', doc.exists);
+        if (!doc.exists) {
+            console.log('❌ Solicitud no encontrada:', req.params.id);
+            return res.status(404).json({ success: false, error: 'Solicitud no encontrada' });
+        }
+        console.log('✅ Solicitud encontrada:', doc.id);
         res.json({ success: true, data: { id: doc.id, ...doc.data() } });
     } catch (error) {
-        console.error('Error al obtener solicitud:', error);
+        console.error('❌ Error al obtener solicitud:', error);
         res.status(500).json({ success: false, error: 'Error interno del servidor' });
     }
 });
