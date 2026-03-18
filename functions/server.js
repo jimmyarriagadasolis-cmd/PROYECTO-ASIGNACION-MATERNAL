@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const functions = require('firebase-functions');
 
 // Inicializar Firebase Admin. Esto hace que la instancia 'db' de Firestore esté disponible.
 try {
@@ -71,10 +72,5 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Iniciar el servidor para App Hosting
-// El contenedor buscará que la app escuche en el puerto definido por process.env.PORT
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Servidor Express escuchando en el puerto ${PORT}`);
-  console.log('Presiona Ctrl-C para terminar.');
-});
+// Exportar como Firebase Cloud Function
+exports.api = functions.https.onRequest(app);
