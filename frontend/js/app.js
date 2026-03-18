@@ -508,8 +508,10 @@ async function loadDashboard() {
 
 async function loadRecentSolicitudes() {
     try {
-        const response = await authFetch(`${API_URL}/solicitudes?limit=5`);
+        // Agregar timestamp para evitar caché
+        const response = await authFetch(`${API_URL}/solicitudes?limit=5&_t=${Date.now()}`);
         const data = await response.json();
+        console.log('📊 Solicitudes recientes cargadas:', data.data.length, 'primera:', data.data[0]);
         if (data.success) {
             const container = document.getElementById('recentSolicitudesTable');
             container.innerHTML = data.data.map(sol => {
@@ -517,15 +519,8 @@ async function loadRecentSolicitudes() {
                                    sol.estado_solicitud === 'En Revisión' ? 'revision' : 'ingresada';
                 const estadoText = sol.estado_solicitud;
                 
-                // Manejar tanto IDs numéricos como UUIDs
-                let displayId;
-                if (typeof sol.id === 'number') {
-                    displayId = `#${sol.id}`;
-                } else if (typeof sol.id === 'string') {
-                    displayId = sol.id.length > 8 ? `${sol.id.substring(0, 8)}...` : sol.id;
-                } else {
-                    displayId = 'N/A';
-                }
+                // Mostrar ID numérico si existe, sino UUID acortado
+                const displayId = sol.id_numerico ? `#${sol.id_numerico}` : (sol.id.length > 8 ? `${sol.id.substring(0, 8)}...` : sol.id);
                 
                 return `
                     <div class="table-row">
