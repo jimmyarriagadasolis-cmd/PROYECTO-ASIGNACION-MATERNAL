@@ -248,8 +248,12 @@ async function searchFuncionariosOptimized(query, limit, offset) {
     try {
         // 1. Búsqueda por RUT exacto primero (más eficiente)
         if (isRutFormat(query)) {
+            const normalizedRut = normalizeRut(query);
+            console.log(`🔍 Búsqueda RUT - Query: "${query}", Normalized: "${normalizedRut}"`);
+            
+            // Primero buscar por ID (rut normalizado)
             const rutDoc = await db.collection('Funcionarios')
-                .doc(normalizeRut(query))
+                .doc(normalizedRut)
                 .get();
             
             if (rutDoc.exists) {
@@ -268,6 +272,31 @@ async function searchFuncionariosOptimized(query, limit, offset) {
                     score: 100 // Puntuación alta para RUT exacto
                 });
                 total = 1;
+            } else {
+                // Si no encuentra por ID, buscar por campo rut con formato
+                const rutQuery = await db.collection('Funcionarios')
+                    .where('rut', '==', query)
+                    .limit(1)
+                    .get();
+                
+                if (!rutQuery.empty) {
+                    const doc = rutQuery.docs[0];
+                    const data = doc.data();
+                    results.push({
+                        id: doc.id,
+                        rut: data.rut,
+                        nombre_completo: data.nombre_completo,
+                        area: data.area,
+                        cargo: data.cargo,
+                        genero: data.genero,
+                        grado: data.grado,
+                        calidad_juridica: data.calidad_juridica,
+                        tipo_funcionario: data.tipo_funcionario,
+                        num_cargas: data.num_cargas,
+                        score: 100
+                    });
+                    total = 1;
+                }
             }
         }
 
@@ -403,7 +432,9 @@ async function fallbackSearch(query, excludeIds) {
  * Funciones auxiliares de utilidad
  */
 function isRutFormat(str) {
-    return /^[0-9]{7,8}[0-9Kk]$/.test(str.replace(/[^0-9kK]/gi, ''));
+    // Acepta tanto RUT con formato (12.345.678-9) como sin formato (123456789)
+    const normalized = str.replace(/[^0-9kK]/gi, '');
+    return /^[0-9]{7,8}[0-9Kk]$/.test(normalized);
 }
 
 function normalizeRut(rut) {
