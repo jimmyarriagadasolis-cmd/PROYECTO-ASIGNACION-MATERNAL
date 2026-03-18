@@ -4,17 +4,16 @@
         "indexes": "firestore.indexes.json"
     },
     "hosting": {
-        "public": ".",
+        "public": "frontend",
         "ignore": [
             "firebase.json",
             "**/.*",
-            "**/node_modules/**",
-            "functions/**"
+            "**/node_modules/**"
         ],
         "rewrites": [
             {
                 "source": "/assets/**",
-                "destination": "/assets/**"
+                "function": "api"
             },
             {
                 "source": "/api/**",
