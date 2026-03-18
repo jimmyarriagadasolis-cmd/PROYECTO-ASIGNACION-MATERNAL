@@ -76,5 +76,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Exportar como Firebase Cloud Function
-exports.api = functions.https.onRequest(app);
+// Exportar como Firebase Cloud Function en us-east4
+exports.api = functions.https.onRequest({
+    region: 'us-east4'
+}, app);
