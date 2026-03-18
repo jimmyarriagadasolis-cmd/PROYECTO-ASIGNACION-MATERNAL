@@ -11,16 +11,8 @@
         ],
         "rewrites": [
             {
-                "source": "/api/**",
-                "function": "api"
-            },
-            {
-                "source": "/assets/**",
-                "function": "api"
-            },
-            {
                 "source": "**",
-                "destination": "/index.html"
+                "function": "api"
             }
         ]
     },
