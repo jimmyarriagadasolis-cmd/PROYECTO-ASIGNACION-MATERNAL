@@ -12,8 +12,9 @@ const { formatearMoneda, numeroAPalabras } = require('./calculoAsignacion');
  * Genera un PDF de ficha individual
  * @param {object} solicitud - Datos completos de la solicitud
  * @param {string} outputPath - Ruta donde guardar el PDF
+ * @param {object} usuario - Datos del usuario que genera el documento (opcional)
  */
-function generarFichaIndividualPDF(solicitud, outputPath) {
+function generarFichaIndividualPDF(solicitud, outputPath, usuario = null) {
     return new Promise((resolve, reject) => {
         try {
             const doc = new PDFDocument({
@@ -28,31 +29,47 @@ function generarFichaIndividualPDF(solicitud, outputPath) {
             const azulOscuro = '#1a365d';
             const azulClaro = '#3182ce';
             const gris = '#4a5568';
+            const azulFondo = '#f0f7ff';
 
-            // Logo del Ministerio
-            const logoPath = path.join(__dirname, '..', '..', 'assets', 'logo_ministerio.png');
+            // Logo del Ministerio - intentar desde assets local primero
+            let logoPath = path.join(__dirname, '..', 'assets', 'logo_ministerio.png');
+            if (!fs.existsSync(logoPath)) {
+                logoPath = path.join(__dirname, '..', '..', 'assets', 'logo_ministerio.png');
+            }
+            
             if (fs.existsSync(logoPath)) {
-                doc.image(logoPath, 50, 30, { width: 80 });
+                doc.image(logoPath, 50, 30, { width: 100, height: 100 });
             }
 
-            // Encabezado
-            doc.fontSize(14)
+            // Encabezado mejorado
+            doc.fontSize(16)
                 .fillColor(azulOscuro)
                 .font('Helvetica-Bold')
-                .text('MINISTERIO DE LAS CULTURAS, LAS ARTES Y EL PATRIMONIO', 140, 40, { align: 'left' });
+                .text('MINISTERIO DE LAS CULTURAS, LAS ARTES Y EL', 160, 35, { align: 'left' });
+            
+            doc.fontSize(16)
+                .text('PATRIMONIO', 160, 52, { align: 'left' });
 
             doc.fontSize(10)
                 .fillColor(gris)
                 .font('Helvetica')
-                .text('Gobierno de Chile', 140, 58);
+                .text('Gobierno de Chile', 160, 72);
 
-            doc.fontSize(12)
+            // Número de solicitud destacado
+            doc.fontSize(10)
                 .fillColor(azulClaro)
                 .font('Helvetica-Bold')
-                .text('CÁLCULO DE ASIGNACIÓN MATERNAL RETROACTIVA', 50, 100, { align: 'center' });
+                .text(`Solicitud N° ${solicitud.id_numerico || solicitud.id}`, 450, 35, { align: 'right' });
 
-            // Línea divisoria
-            doc.moveTo(50, 120).lineTo(562, 120).stroke(azulOscuro);
+            doc.fontSize(14)
+                .fillColor(azulClaro)
+                .font('Helvetica-Bold')
+                .text('CÁLCULO DE ASIGNACIÓN MATERNAL RETROACTIVA', 50, 110, { align: 'center' });
+
+            // Línea divisoria más gruesa
+            doc.lineWidth(2);
+            doc.moveTo(50, 135).lineTo(562, 135).stroke(azulOscuro);
+            doc.lineWidth(1);
 
             let y = 140;
 
@@ -197,13 +214,42 @@ function generarFichaIndividualPDF(solicitud, outputPath) {
 
             y += 20;
 
+            // Datos del funcionario que generó el documento
+            if (usuario) {
+                if (y > 650) {
+                    doc.addPage();
+                    y = 50;
+                }
+                
+                doc.fontSize(10)
+                    .fillColor(azulOscuro)
+                    .font('Helvetica-Bold')
+                    .text('DOCUMENTO GENERADO POR:', 50, y);
+                y += 15;
+                
+                doc.fontSize(9)
+                    .fillColor(gris)
+                    .font('Helvetica');
+                doc.text(`Funcionario: ${usuario.nombre || 'N/A'}`, 50, y);
+                y += 12;
+                doc.text(`RUT: ${usuario.rut || 'N/A'}`, 50, y);
+                y += 12;
+                doc.text(`Cargo: ${usuario.cargo || 'N/A'}`, 50, y);
+                y += 12;
+                doc.text(`Departamento: ${usuario.departamento || 'N/A'}`, 50, y);
+                y += 20;
+            }
+
             // Pie de página
-            const fechaGeneracion = new Date().toLocaleString('es-CL');
+            const fechaGeneracion = new Date().toLocaleString('es-CL', { 
+                dateStyle: 'long', 
+                timeStyle: 'short' 
+            });
             doc.fontSize(8)
                 .fillColor(gris)
                 .font('Helvetica')
                 .text(`Documento generado el: ${fechaGeneracion}`, 50, 720);
-            doc.text(`ID Solicitud: ${solicitud.id}`, 50, 730);
+            doc.text(`Solicitud N° ${solicitud.id_numerico || solicitud.id}`, 50, 730);
             doc.text('Sistema de Asignaciones 1.0 - Ministerio de las Culturas', 280, 730);
 
             doc.end();

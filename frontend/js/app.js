@@ -657,15 +657,8 @@ function renderSolicitudes(solicitudes) {
         return;
     }
     tbody.innerHTML = solicitudes.map(sol => {
-        // Manejar tanto IDs numéricos como UUIDs
-        let displayId;
-        if (typeof sol.id === 'number') {
-            displayId = `#${sol.id}`;
-        } else if (typeof sol.id === 'string') {
-            displayId = sol.id.length > 8 ? `${sol.id.substring(0, 8)}...` : sol.id;
-        } else {
-            displayId = 'N/A';
-        }
+        // Mostrar ID numérico si existe, sino mostrar UUID acortado
+        const displayId = sol.id_numerico ? `#${sol.id_numerico}` : (sol.id.length > 8 ? `${sol.id.substring(0, 8)}...` : sol.id);
         
         return `
         <tr>

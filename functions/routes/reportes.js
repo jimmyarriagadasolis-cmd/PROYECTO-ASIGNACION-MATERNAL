@@ -32,11 +32,14 @@ router.get('/ficha/:id', async (req, res) => {
         console.log('✅ Solicitud encontrada, generando PDF:', doc.id);
         const solicitud = { id: doc.id, ...doc.data() };
 
+        // Obtener datos del usuario autenticado si están disponibles
+        const usuario = req.user || null;
+
         const filename = `Ficha_${solicitud.rut_funcionaria.replace(/\./g, '')}_${Date.now()}.pdf`;
         // Usar el directorio temporal para guardar el archivo
         const outputPath = path.join(os.tmpdir(), filename);
 
-        await generarFichaIndividualPDF(solicitud, outputPath);
+        await generarFichaIndividualPDF(solicitud, outputPath, usuario);
         console.log('✅ PDF generado:', filename);
 
         res.download(outputPath, filename, (err) => {

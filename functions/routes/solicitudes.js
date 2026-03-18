@@ -34,8 +34,12 @@ router.get('/', async (req, res) => {
         const snapshot = await query.get();
         let solicitudes = snapshot.docs.map(doc => {
             const data = doc.data();
-            // Siempre usar el ID real de Firestore para las operaciones
-            return { id: doc.id, ...data };
+            // Usar ID numérico para display, pero mantener el UUID para operaciones
+            return { 
+                id: doc.id,  // UUID de Firestore (para operaciones)
+                id_numerico: data.id_numerico || null,  // ID correlativo (para display)
+                ...data 
+            };
         });
         
         // Apply text search filter in memory (for nombre)
