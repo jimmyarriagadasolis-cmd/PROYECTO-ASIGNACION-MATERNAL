@@ -34,9 +34,8 @@ router.get('/', async (req, res) => {
         const snapshot = await query.get();
         let solicitudes = snapshot.docs.map(doc => {
             const data = doc.data();
-            // Usar ID numérico si existe, si no usar el UUID
-            const displayId = data.id_numerico || doc.id;
-            return { id: displayId, uuid: doc.id, ...data };
+            // Siempre usar el ID real de Firestore para las operaciones
+            return { id: doc.id, ...data };
         });
         
         // Apply text search filter in memory (for nombre)
@@ -104,6 +103,19 @@ router.get('/estadisticas', async (req, res) => {
         res.json({ success: true, data: stats });
     } catch (error) {
         console.error('Error al obtener estadísticas:', error);
+        res.status(500).json({ success: false, error: 'Error interno del servidor' });
+    }
+});
+
+router.get('/debug/list', async (req, res) => {
+    try {
+        console.log('🔍 DEBUG: Listando todas las solicitudes');
+        const snapshot = await db.collection('Solicitudes_Asignacion_Maternal').limit(10).get();
+        const solicitudes = snapshot.docs.map(doc => ({ id: doc.id, nombre: doc.data().nombre_completo || 'Sin nombre', estado: doc.data().estado_solicitud || 'Sin estado' }));
+        console.log('📊 Solicitudes encontradas:', solicitudes.length);
+        res.json({ success: true, data: solicitudes });
+    } catch (error) {
+        console.error('❌ Error al listar solicitudes:', error);
         res.status(500).json({ success: false, error: 'Error interno del servidor' });
     }
 });

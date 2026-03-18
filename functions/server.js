@@ -47,9 +47,11 @@ try {
 }
 
 // Servir assets en todos los entornos (necesario para Firebase Functions)
-const assetsPath = path.join(__dirname, '..', 'assets');
+const assetsPath = path.join(__dirname, 'assets');
 app.use('/assets', express.static(assetsPath));
 console.log(`📁 Sirviendo assets desde: ${assetsPath}`);
+console.log(`📁 __dirname actual: ${__dirname}`);
+console.log(`📁 Ruta completa de assets: ${path.resolve(assetsPath)}`);
 
 // En desarrollo local, también servir el frontend
 if (process.env.NODE_ENV !== 'production') {
