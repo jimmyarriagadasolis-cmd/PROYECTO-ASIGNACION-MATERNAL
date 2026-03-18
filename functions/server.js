@@ -46,22 +46,25 @@ try {
     process.exit(1);
 }
 
-// Servir archivos estáticos del frontend y assets
-const frontendPath = path.join(__dirname, '..', 'frontend');
-const assetsPath = path.join(__dirname, '..', 'assets');
-app.use(express.static(frontendPath));
-app.use('/assets', express.static(assetsPath));
-console.log(`📁 Sirviendo frontend desde: ${frontendPath}`);
-console.log(`📁 Sirviendo assets desde: ${assetsPath}`);
+// En modo Firebase Functions, no servir archivos estáticos (el hosting lo hace)
+if (process.env.NODE_ENV !== 'production') {
+    // Solo para desarrollo local
+    const frontendPath = path.join(__dirname, '..', 'frontend');
+    const assetsPath = path.join(__dirname, '..', 'assets');
+    app.use(express.static(frontendPath));
+    app.use('/assets', express.static(assetsPath));
+    console.log(`📁 Sirviendo frontend desde: ${frontendPath}`);
+    console.log(`📁 Sirviendo assets desde: ${assetsPath}`);
 
-// SPA fallback: cualquier ruta que no sea /api/* devuelve index.html
-app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
-        res.sendFile(path.join(frontendPath, 'index.html'));
-    } else {
-        res.status(404).json({ error: 'Endpoint no encontrado' });
-    }
-});
+    // SPA fallback para desarrollo local
+    app.get('*', (req, res) => {
+        if (!req.path.startsWith('/api')) {
+            res.sendFile(path.join(frontendPath, 'index.html'));
+        } else {
+            res.status(404).json({ error: 'Endpoint no encontrado' });
+        }
+    });
+}
 
 // Manejo de errores global
 app.use((err, req, res, next) => {

@@ -17,8 +17,12 @@
                 "destination": "/assets/**"
             },
             {
-                "source": "**",
+                "source": "/api/**",
                 "function": "api"
+            },
+            {
+                "source": "**",
+                "destination": "/index.html"
             }
         ]
     },
