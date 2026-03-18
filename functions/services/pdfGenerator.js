@@ -99,7 +99,7 @@ function generarFichaIndividualPDF(solicitud, outputPath, usuario = null) {
             // Datos de la Funcionaria
             seccion('DATOS DE LA FUNCIONARIA');
             campo('Nombre', solicitud.nombre_completo);
-            campo('RUT', solicitud.rut_funcionaria);
+            campo('RUT', formatearRut(solicitud.rut_funcionaria));
             campo('Departamento/Unidad', solicitud.departamento_unidad);
             campo('Correo Institucional', solicitud.correo_electronico);
             campo('Teléfono', solicitud.telefono || 'No registrado');
@@ -274,7 +274,52 @@ function formatearFecha(fecha) {
     return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
 }
 
+/**
+ * Normaliza un RUT eliminando ceros iniciales
+ * @param {string} rut 
+ * @returns {string} - RUT sin ceros iniciales
+ */
+function normalizarRut(rut) {
+    if (!rut) return '';
+    const rutLimpio = rut.replace(/\./g, '').replace(/-/g, '').trim().toUpperCase();
+    const cuerpo = rutLimpio.slice(0, -1);
+    const dv = rutLimpio.slice(-1);
+    
+    // Eliminar ceros iniciales del cuerpo
+    const cuerpoSinCeros = cuerpo.replace(/^0+/, '');
+    
+    return cuerpoSinCeros + dv;
+}
+
+/**
+ * Formatea un RUT al formato XX.XXX.XXX-X (sin ceros iniciales)
+ * @param {string} rut 
+ * @returns {string}
+ */
+function formatearRut(rut) {
+    // Primero normalizar eliminando ceros iniciales
+    const rutNormalizado = normalizarRut(rut);
+    const cuerpo = rutNormalizado.slice(0, -1);
+    const dv = rutNormalizado.slice(-1);
+
+    let cuerpoFormateado = '';
+    let contador = 0;
+
+    for (let i = cuerpo.length - 1; i >= 0; i--) {
+        cuerpoFormateado = cuerpo[i] + cuerpoFormateado;
+        contador++;
+        if (contador === 3 && i !== 0) {
+            cuerpoFormateado = '.' + cuerpoFormateado;
+            contador = 0;
+        }
+    }
+
+    return `${cuerpoFormateado}-${dv}`;
+}
+
 module.exports = {
     generarFichaIndividualPDF,
-    formatearFecha
+    formatearFecha,
+    normalizarRut,
+    formatearRut
 };

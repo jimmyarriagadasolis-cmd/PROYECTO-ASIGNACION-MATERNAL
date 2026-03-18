@@ -35,7 +35,7 @@ router.get('/ficha/:id', async (req, res) => {
         // Obtener datos del usuario autenticado si están disponibles
         const usuario = req.user || null;
 
-        const filename = `Ficha_${solicitud.rut_funcionaria.replace(/\./g, '')}_${Date.now()}.pdf`;
+        const filename = `Ficha_${solicitud.rut_funcionaria.replace(/\./g, '').replace(/^0+/, '')}_${Date.now()}.pdf`;
         // Usar el directorio temporal para guardar el archivo
         const outputPath = path.join(os.tmpdir(), filename);
 

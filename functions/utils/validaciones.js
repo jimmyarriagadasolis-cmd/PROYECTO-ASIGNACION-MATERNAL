@@ -60,14 +60,32 @@ function validarRut(rut) {
 }
 
 /**
- * Formatea un RUT al formato XX.XXX.XXX-X
+ * Normaliza un RUT eliminando ceros iniciales
+ * @param {string} rut 
+ * @returns {string} - RUT sin ceros iniciales
+ */
+function normalizarRut(rut) {
+    if (!rut) return '';
+    const rutLimpio = rut.replace(/\./g, '').replace(/-/g, '').trim().toUpperCase();
+    const cuerpo = rutLimpio.slice(0, -1);
+    const dv = rutLimpio.slice(-1);
+    
+    // Eliminar ceros iniciales del cuerpo
+    const cuerpoSinCeros = cuerpo.replace(/^0+/, '');
+    
+    return cuerpoSinCeros + dv;
+}
+
+/**
+ * Formatea un RUT al formato XX.XXX.XXX-X (sin ceros iniciales)
  * @param {string} rut 
  * @returns {string}
  */
 function formatearRut(rut) {
-    const rutLimpio = rut.replace(/\./g, '').replace(/-/g, '').trim().toUpperCase();
-    const cuerpo = rutLimpio.slice(0, -1);
-    const dv = rutLimpio.slice(-1);
+    // Primero normalizar eliminando ceros iniciales
+    const rutNormalizado = normalizarRut(rut);
+    const cuerpo = rutNormalizado.slice(0, -1);
+    const dv = rutNormalizado.slice(-1);
 
     let cuerpoFormateado = '';
     let contador = 0;
@@ -223,6 +241,7 @@ function validarSolicitud(solicitud) {
 module.exports = {
     validarRut,
     formatearRut,
+    normalizarRut,
     validarEmail,
     validarTelefono,
     validarFecha,

@@ -266,10 +266,25 @@ function formatRutInput(e) {
     if (value.length > 1) {
         const dv = value.slice(-1);
         let body = value.slice(0, -1);
+        // Eliminar ceros iniciales del cuerpo
+        body = body.replace(/^0+/, '');
         body = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         value = body + '-' + dv;
     }
     e.target.value = value;
+}
+
+// Función para normalizar RUT eliminando ceros iniciales
+function normalizarRut(rut) {
+    if (!rut) return '';
+    const rutLimpio = rut.replace(/\./g, '').replace(/-/g, '').trim().toUpperCase();
+    const cuerpo = rutLimpio.slice(0, -1);
+    const dv = rutLimpio.slice(-1);
+    
+    // Eliminar ceros iniciales del cuerpo
+    const cuerpoSinCeros = cuerpo.replace(/^0+/, '');
+    
+    return cuerpoSinCeros + dv;
 }
 
 // === AUTOCOMPLETE FUNCIONARIOS ===
