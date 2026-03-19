@@ -18,21 +18,31 @@ async function authFetch(url, options = {}) {
     if (!options.headers) options.headers = {};
 
     const user = firebase.auth().currentUser;
+    console.log("🔐 AuthFetch - Current user:", user ? user.email : null);
+    console.log("🌐 AuthFetch - URL:", url);
+    
     if (user) {
         try {
             // Forzar la actualización del token para asegurar que no ha expirado.
+            console.log("🔑 Getting ID token...");
             const idToken = await user.getIdToken(true);
+            console.log("✅ ID token obtained successfully");
             options.headers['Authorization'] = 'Bearer ' + idToken;
+            console.log("📤 Authorization header set");
         } catch (error) {
-            console.error("Error al obtener el token de Firebase:", error);
+            console.error("❌ Error getting Firebase token:", error);
+            console.error("🔍 Token error details:", error.message, error.code);
+            showToast("Sesión expirada. Por favor inicia sesión nuevamente.", 'error');
             handleLogout(); // Si el token falla, la sesión ya no es válida.
             return Promise.reject(new Error("Sesión de Firebase inválida."));
         }
     } else {
         // Si no hay usuario, no se debería intentar una llamada autenticada.
+        console.error("❌ No Firebase user found for authFetch");
         return Promise.reject(new Error("Usuario no autenticado."));
     }
 
+    console.log("📡 Making fetch request...");
     return fetch(url, options);
 }
 
@@ -64,28 +74,39 @@ if (document.readyState === 'loading') {
  */
 function setupAuthListener() {
     firebase.auth().onAuthStateChanged(async (user) => {
+        console.log("🔍 Auth state changed. User:", user ? user.email : null);
+        
         if (user) {
             // SI hay un usuario de Firebase, obtenemos su perfil de nuestra base de datos.
-            console.log("Firebase user detected. Fetching profile...");
+            console.log("✅ Firebase user detected. Fetching profile...");
+            console.log("🔑 User UID:", user.uid);
+            console.log("🌐 API URL:", API_URL);
+            
             try {
                 const response = await authFetch(`${API_URL}/usuarios/me`);
+                console.log("📡 Profile response status:", response.status);
+                
                 const data = await response.json();
+                console.log("📊 Profile data:", data);
 
                 if (response.ok && data.success) {
+                    console.log("✅ Profile obtained successfully");
                     state.usuario = data.data;
                     uiSetAuthenticated(data.data); // Actualizar UI a estado "logueado"
                 } else {
-                    console.error("No se pudo obtener el perfil del usuario desde el backend:", data.error);
+                    console.error("❌ Profile fetch failed:", data);
                     showToast(data.error || "Tu usuario no tiene un perfil válido en el sistema.", 'error');
                     handleLogout(); // Si no hay perfil, no puede usar el sistema.
                 }
             } catch (error) {
-                console.error("Error crítico al verificar sesión:", error);
+                console.error("❌ Critical error verifying session:", error);
+                console.error("🔍 Error details:", error.message, error.stack);
+                showToast("Error de conexión. Por favor intenta nuevamente.", 'error');
                 uiSetUnauthenticated();
             }
         } else {
             // NO hay usuario de Firebase, mostrar el login.
-            console.log("No Firebase user. Setting UI to unauthenticated.");
+            console.log("🚫 No Firebase user. Setting UI to unauthenticated.");
             uiSetUnauthenticated();
         }
     });
