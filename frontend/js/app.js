@@ -52,11 +52,39 @@ function initApp() {
     // Esto es lo más importante.
     setupAuthListener();
     
+    // Configurar mobile menu toggle
+    setupMobileMenu();
+    
+    // Luego, inicializar el resto de componentes de la UI.
+    
     // Luego, inicializar el resto de componentes de la UI.
     initTheme();
     initNavigation();
     initForms();
     initModals();
+}
+
+/**
+ * Configura el menú mobile toggle
+ */
+function setupMobileMenu() {
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    
+    if (menuToggle && sidebar) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            menuToggle.setAttribute('aria-expanded', sidebar.classList.contains('active'));
+        });
+        
+        // Cerrar menú al hacer click fuera
+        document.addEventListener('click', (e) => {
+            if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                sidebar.classList.remove('active');
+                menuToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
 }
 
 // Asegurarse de que el DOM está cargado antes de ejecutar el script.
@@ -117,22 +145,28 @@ function setupAuthListener() {
  */
 async function handleLogin(e) {
     e.preventDefault();
+    const validation = uiHelper.validateForm('formLogin');
+    if (!validation.valid) {
+        uiHelper.showToast(validation.errors[0], 'warning');
+        return;
+    }
+
     const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
 
+    // Set loading state
+    uiHelper.setLoading('formLogin', true);
+
     try {
-        showToast('Verificando credenciales...', 'info');
+        uiHelper.showToast('Verificando credenciales...', 'info');
         // El campo "username" se trata como el email para Firebase.
         const email = username.includes('@') ? username : `${username}@cultura.gob.cl`;
         await firebase.auth().signInWithEmailAndPassword(email, password);
         // Si el login es exitoso, el `onAuthStateChanged` se activará y hará el resto.
     } catch (error) {
-        console.error("Fallo el inicio de sesión:", error.code);
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-            showToast('Usuario o contraseña incorrectos.', 'error');
-        } else {
-            showToast('Error de autenticación. Revisa tu conexión.', 'error');
-        }
+        uiHelper.handleError(error, 'login');
+    } finally {
+        uiHelper.setLoading('formLogin', false);
     }
 }
 
