@@ -126,12 +126,19 @@ body {
 }
 
 .sidebar-header .logo {
-    width: 100px;
+    width: 140px;
     height: auto;
-    margin-bottom: 12px;
-    border-radius: 4px;
+    margin-bottom: 16px;
+    border-radius: 6px;
     background: white;
     padding: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sidebar-header .logo:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-header h2 {
@@ -1247,11 +1254,12 @@ input.error:focus, select.error:focus, textarea.error:focus {
 }
 
 .login-logo {
-    width: 100px;
-    margin-bottom: 16px;
-    border-radius: 4px;
+    width: 160px;
+    margin-bottom: 20px;
+    border-radius: 8px;
     background: white;
-    padding: 4px;
+    padding: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .login-header h2 {
