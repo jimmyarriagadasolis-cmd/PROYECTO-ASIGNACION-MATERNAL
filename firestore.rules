@@ -34,8 +34,38 @@ service cloud.firestore {
     // Reglas para solicitudes
     match /solicitudes/{solicitudId} {
       allow read: if canRead();
-      allow create: if canWrite();
-      allow update: if canWrite();
+      allow create: if canWrite() && 
+        // Validación de campos requeridos
+        request.resource.data.keys().hasAll([
+          'rut_funcionaria', 
+          'nombre_completo', 
+          'departamento_unidad',
+          'fecha_ingreso_solicitud',
+          'sueldo_bruto_mensual',
+          'estado_solicitud'
+        ]) &&
+        // Validación de tipos de datos
+        request.resource.data.rut_funcionaria is string &&
+        request.resource.data.nombre_completo is string &&
+        request.resource.data.departamento_unidad is string &&
+        request.resource.data.fecha_ingreso_solicitud is string &&
+        request.resource.data.sueldo_bruto_mensual is int &&
+        request.resource.data.estado_solicitud is string &&
+        // Validación de formato de RUT (7-8 caracteres + K)
+        request.resource.data.rut_funcionaria.matches(/^[0-9Kk]{7,8}$/) &&
+        // Validación de valores
+        request.resource.data.sueldo_bruto_mensual > 0 &&
+        request.resource.data.sueldo_bruto_mensual <= 10000000 &&
+        // Validación de estado
+        request.resource.data.estado_solicitud in ['Ingresada', 'En Revisión', 'Aprobada', 'Rechazada'];
+      allow update: if canWrite() && 
+        // Permitir actualización solo de campos específicos
+        request.resource.data.diff(resource.data).affectedKeys().hasAll([
+          'estado_solicitud', 
+          'observaciones',
+          'fecha_aprobacion'
+        ]) ||
+        request.resource.data.diff(resource.data).affectedKeys().size() == 0;
       allow delete: if isAdmin();
     }
     

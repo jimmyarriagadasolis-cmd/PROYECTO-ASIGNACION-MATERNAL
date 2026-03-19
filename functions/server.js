@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const functions = require('firebase-functions');
+const helmet = require('helmet');
+const { generalLimiter, strictLimiter, loginLimiter } = require('./middleware/rateLimit');
 
 // Inicializar Firebase Admin. Esto hace que la instancia 'db' de Firestore esté disponible.
 try {
@@ -15,10 +17,59 @@ try {
 
 const app = express();
 
+// CORS Configuration - Restrictive
+const allowedOrigins = [
+    'https://asignacion-maternal.web.app',
+    'https://functions--asignacion-maternal.us-east4.hosted.app',
+    'http://localhost:3000', // Desarrollo local
+    'http://localhost:5000'  // Emuladores Firebase
+];
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Permitir requests sin origin (mobile apps, curl, etc.)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            console.log('🚫 Origen CORS no permitido:', origin);
+            callback(new Error('Origen no permitido por CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+// Security middleware
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https:"],
+            scriptSrc: ["'self'"],
+            connectSrc: ["'self'"]
+        }
+    },
+    crossOriginEmbedderPolicy: false // Necesario para Firebase Functions
+}));
+
+// Rate limiting
+app.use(generalLimiter);
+
 // Middleware
-app.use(cors({ origin: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`📡 ${req.method} ${req.path} - Origin: ${req.headers.origin || 'No Origin'} - IP: ${req.ip}`);
+    next();
+});
 
 // Configurar rutas con try-catch para detectar errores de require()
 console.log("Configurando rutas de la API...");
@@ -69,12 +120,53 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
-// Manejo de errores global
+// Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Ha ocurrido un error no controlado:', err.stack);
-    res.status(500).json({
-        error: 'Error interno del servidor',
-        mensaje: err.message
+    console.error('❌ Error no manejado:', err);
+    
+    // Log estructurado
+    const errorInfo = {
+        message: err.message,
+        stack: err.stack,
+        path: req.path,
+        method: req.method,
+        origin: req.headers.origin,
+        timestamp: new Date().toISOString()
+    };
+    
+    if (process.env.NODE_ENV === 'production') {
+        // En producción, no enviar stack trace al cliente
+        res.status(500).json({ 
+            success: false,
+            error: 'Error interno del servidor',
+            code: 'INTERNAL_SERVER_ERROR'
+        });
+    } else {
+        // En desarrollo, enviar detalles del error
+        res.status(500).json({ 
+            success: false,
+            error: err.message,
+            stack: err.stack
+        });
+    }
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        version: process.env.npm_package_version || '1.0.0',
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+    res.status(404).json({
+        success: false,
+        error: 'Endpoint no encontrado',
+        path: req.originalUrl
     });
 });
 

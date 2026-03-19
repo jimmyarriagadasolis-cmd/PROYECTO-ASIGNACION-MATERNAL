@@ -8,6 +8,7 @@
 const express = require('express');
 const router = express.Router();
 const { db, admin } = require('../database'); // Importar Firestore y Firebase Admin SDK
+const { loginLimiter } = require('../middleware/rateLimit');
 
 // Middleware para verificar el token de ID de Firebase
 const verifyFirebaseToken = async (req, res, next) => {

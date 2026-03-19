@@ -8,14 +8,11 @@ const router = express.Router();
 const { db } = require('../database'); // Instancia de Firestore
 const { FieldValue } = require('firebase-admin/firestore');
 const { calcularAsignacionMaternal } = require('../services/calculoAsignacion');
-const { validarSolicitud } = require('../utils/validaciones');
+const { validarSolicitud, normalizeDepartamento } = require('../utils/validaciones');
 const { getNextSolicitudId, getContadorEstado, resetContadorSolicitudes, asignarIdsExistente } = require('../services/idGenerator');
+const { validateSolicitud, validateSolicitudUpdate, handleValidationErrors } = require('../middleware/validation');
+const { strictLimiter } = require('../middleware/rateLimit');
 
-// Helper para normalizar datos
-function normalizeDepartamento(value) {
-    if (typeof value !== 'string') return value;
-    return value.replace(/siclo/ig, 'ciclo');
-}
 
 // ... (Las rutas GET que no usan el cálculo no necesitan cambios)
 router.get('/', async (req, res) => {
@@ -146,7 +143,7 @@ router.get('/:id', async (req, res) => {
  * POST /api/solicitudes
  * Crear una nueva solicitud (AHORA ASÍNCRONO)
  */
-router.post('/', async (req, res) => {
+router.post('/', strictLimiter, validateSolicitud, handleValidationErrors, async (req, res) => {
     try {
         let solicitud = req.body;
         solicitud.departamento_unidad = normalizeDepartamento(solicitud.departamento_unidad);
@@ -215,7 +212,7 @@ router.post('/', async (req, res) => {
  * PUT /api/solicitudes/:id
  * Actualizar una solicitud (AHORA ASÍNCRONO)
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', strictLimiter, validateSolicitudUpdate, handleValidationErrors, async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
