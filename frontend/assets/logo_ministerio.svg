@@ -1,8 +1,14 @@
 <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="40" height="40" rx="8" fill="#1a365d"/>
-  <path d="M20 8L24 16H16L20 8Z" fill="#bee3f8"/>
-  <rect x="12" y="18" width="16" height="2" fill="#90cdf4"/>
-  <rect x="12" y="22" width="16" height="2" fill="#90cdf4"/>
-  <rect x="12" y="26" width="16" height="2" fill="#90cdf4"/>
-  <rect x="12" y="30" width="10" height="2" fill="#90cdf4"/>
+  <!-- Escudo del Gobierno de Chile -->
+  <rect width="40" height="40" rx="6" fill="#0033A0"/>
+  
+  <!-- Estrella central -->
+  <path d="M20 8L22 14L28 14L23 18L25 24L20 20L15 24L17 18L12 14L18 14L20 8Z" fill="#FFFFFF"/>
+  
+  <!-- Rayos solares -->
+  <path d="M20 4V2M20 38V36M4 20H2M38 20H36M7 7L5.5 5.5M34.5 34.5L33 33M33 7L34.5 5.5M7 34.5L5.5 33" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- Cinta inferior -->
+  <rect x="8" y="28" width="24" height="3" fill="#FFD700"/>
+  <text x="20" y="30.5" text-anchor="middle" fill="#0033A0" font-size="2" font-weight="bold">CHILE</text>
 </svg>
